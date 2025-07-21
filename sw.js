@@ -1,4 +1,4 @@
-const CACHE_NAME = 'turf-booking-v1.0.0';
+const CACHE_NAME = 'turf-booking-v1.0.1';
 const urlsToCache = [
     '/',
     '/index.html',
@@ -9,6 +9,12 @@ const urlsToCache = [
     // Add your CSS files if they're separate
     'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
 ];
+// Add this to your existing sw.js
+self.addEventListener('message', event => {
+    if (event.data && event.data.action === 'skipWaiting') {
+        self.skipWaiting();
+    }
+});
 
 // Install Service Worker
 self.addEventListener('install', event => {
