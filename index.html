@@ -2133,14 +2133,17 @@ document.addEventListener('keydown', function(e) {
 
 
         // Utility functions
-        function formatTime(time) {
-            if (!time) return 'N/A';
-            const [hours, minutes] = time.split(':');
-            const hour = parseInt(hours);
-            const ampm = hour >= 12 ? 'PM' : 'AM';
-            const displayHour = hour % 12 || 12;
-            return `${displayHour}:${minutes} ${ampm}`;
-        }
+        // Update this function for better user display
+function formatTime(time) {
+    if (!time) return 'N/A';
+    
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
+}
+
 
         function formatTimeSlot(timeSlot) {
             const [start, end] = timeSlot.split('-');
