@@ -1,15 +1,15 @@
-const CACHE_NAME = 'turf-booking-v1.0.1';
+const CACHE_NAME = 'turf-booking-v1.0.2'; // Increment this version
 const urlsToCache = [
     '/',
     '/index.html',
     '/admin.html',
     '/manifest.json',
     '/turf.jpg',
-    '/turf.jpg',
     // Add your CSS files if they're separate
     'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
 ];
-// Add this to your existing sw.js
+
+// Message handling for skipWaiting
 self.addEventListener('message', event => {
     if (event.data && event.data.action === 'skipWaiting') {
         self.skipWaiting();
@@ -32,68 +32,65 @@ self.addEventListener('install', event => {
     self.skipWaiting();
 });
 
-
-
-// In sw.js - Network-first for HTML, cache-first for data
+// SINGLE FETCH EVENT LISTENER - Network-first for HTML, Cache-first for others
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
     
     // Network-first for HTML files (gets updates immediately)
     if (event.request.destination === 'document' || url.pathname.endsWith('.html')) {
         event.respondWith(
-            fetch(event.request)
+            fetch(event.request, {
+                cache: 'no-store' // Force bypass cache for HTML
+            })
                 .then(response => {
                     // Update cache with new version
-                    const responseClone = response.clone();
-                    caches.open(CACHE_NAME)
-                        .then(cache => cache.put(event.request, responseClone));
+                    if (response && response.status === 200) {
+                        const responseClone = response.clone();
+                        caches.open(CACHE_NAME)
+                            .then(cache => cache.put(event.request, responseClone));
+                    }
                     return response;
                 })
-                .catch(() => caches.match(event.request)) // Fallback to cache
+                .catch(() => {
+                    // Fallback to cache only if network fails
+                    console.log('Network failed, using cache');
+                    return caches.match(event.request) || caches.match('/index.html');
+                })
         );
     } else {
-        // Cache-first for everything else (preserves user data)
+        // Cache-first for everything else (CSS, JS, images, API calls)
         event.respondWith(
             caches.match(event.request)
-                .then(response => response || fetch(event.request))
-        );
-    }
-});
-
-// Fetch event
-self.addEventListener('fetch', event => {
-    event.respondWith(
-        caches.match(event.request)
-            .then(response => {
-                // Return cached version or fetch from network
-                if (response) {
-                    return response;
-                }
-                
-                // Clone the request because it's a stream
-                const fetchRequest = event.request.clone();
-                
-                return fetch(fetchRequest).then(response => {
-                    // Check if valid response
-                    if (!response || response.status !== 200 || response.type !== 'basic') {
-                        return response;
+                .then(response => {
+                    if (response) {
+                        return response; // Return cached version
                     }
                     
-                    // Clone response because it's a stream
-                    const responseToCache = response.clone();
+                    // Clone the request because it's a stream
+                    const fetchRequest = event.request.clone();
                     
-                    caches.open(CACHE_NAME)
-                        .then(cache => {
-                            cache.put(event.request, responseToCache);
-                        });
-                    
-                    return response;
-                }).catch(() => {
-                    // Return offline page or cached content
-                    return caches.match('/index.html');
-                });
-            })
-    );
+                    return fetch(fetchRequest).then(response => {
+                        // Check if valid response
+                        if (!response || response.status !== 200 || response.type !== 'basic') {
+                            return response;
+                        }
+                        
+                        // Clone response because it's a stream
+                        const responseToCache = response.clone();
+                        
+                        caches.open(CACHE_NAME)
+                            .then(cache => {
+                                cache.put(event.request, responseToCache);
+                            });
+                        
+                        return response;
+                    }).catch(() => {
+                        // Return offline page or cached content for non-HTML
+                        return caches.match(event.request);
+                    });
+                })
+        );
+    }
 });
 
 // Activate Service Worker
@@ -126,7 +123,7 @@ function doBackgroundSync() {
     console.log('Background sync triggered');
 }
 
-// Push notifications (optional)
+// Push notifications
 self.addEventListener('push', event => {
     const options = {
         body: event.data ? event.data.text() : 'New booking update!',
@@ -154,4 +151,15 @@ self.addEventListener('push', event => {
     event.waitUntil(
         self.registration.showNotification('Turf Booking', options)
     );
+});
+
+// Handle notification clicks
+self.addEventListener('notificationclick', event => {
+    event.notification.close();
+    
+    if (event.action === 'explore') {
+        event.waitUntil(
+            clients.openWindow('/')
+        );
+    }
 });
