@@ -32,6 +32,34 @@ self.addEventListener('install', event => {
     self.skipWaiting();
 });
 
+
+
+// In sw.js - Network-first for HTML, cache-first for data
+self.addEventListener('fetch', event => {
+    const url = new URL(event.request.url);
+    
+    // Network-first for HTML files (gets updates immediately)
+    if (event.request.destination === 'document' || url.pathname.endsWith('.html')) {
+        event.respondWith(
+            fetch(event.request)
+                .then(response => {
+                    // Update cache with new version
+                    const responseClone = response.clone();
+                    caches.open(CACHE_NAME)
+                        .then(cache => cache.put(event.request, responseClone));
+                    return response;
+                })
+                .catch(() => caches.match(event.request)) // Fallback to cache
+        );
+    } else {
+        // Cache-first for everything else (preserves user data)
+        event.respondWith(
+            caches.match(event.request)
+                .then(response => response || fetch(event.request))
+        );
+    }
+});
+
 // Fetch event
 self.addEventListener('fetch', event => {
     event.respondWith(
