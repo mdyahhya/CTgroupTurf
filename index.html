@@ -845,6 +845,50 @@ body {
 }
 
 
+
+/* Fix close button positioning and size */
+.turf-detail-modal .close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.7);
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 10;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.turf-detail-modal .close:hover {
+    background: rgba(0, 0, 0, 0.9);
+    transform: scale(1.1);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* Ensure image slider doesn't cover the close button */
+.image-slider-container {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.image-slider {
+    position: relative;
+    height: 200px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f0f0f0;
+    z-index: 1;
+}
+
+
     </style>
 </head>
 <body>
@@ -1674,35 +1718,69 @@ window.addEventListener('offline', () => {
 
 
         function displaySlots(bookedSlots) {
-            try {
-                const container = document.getElementById('slotsContainer');
-                const [openHour] = currentTurf.opening_time.split(':').map(Number);
-                const [closeHour] = currentTurf.closing_time.split(':').map(Number);
+    try {
+        const container = document.getElementById('slotsContainer');
+        const [openHour] = currentTurf.opening_time.split(':').map(Number);
+        const [closeHour] = currentTurf.closing_time.split(':').map(Number);
+        
+        let slotsHtml = '<div class="slots-grid">';
+        
+        // Handle overnight operations (e.g., 6 AM to 12 AM next day)
+        if (closeHour <= openHour) {
+            // Case 1: From opening hour to midnight (23:00-24:00)
+            for (let hour = openHour; hour < 24; hour++) {
+                const timeSlot = `${hour.toString().padStart(2, '0')}:00-${(hour + 1).toString().padStart(2, '0')}:00`;
+                const isBooked = bookedSlots.includes(timeSlot);
                 
-                let slotsHtml = '<div class="slots-grid">';
+                slotsHtml += `
+                    <div class="slot ${isBooked ? 'booked' : 'available'}" 
+                         ${!isBooked ? `onclick="toggleSlot('${timeSlot}')"` : ''}
+                         data-slot="${timeSlot}">
+                        ${formatTimeSlot(timeSlot)}
+                    </div>
+                `;
+            }
+            
+            // Case 2: From midnight to closing hour
+            for (let hour = 0; hour < closeHour; hour++) {
+                const nextHour = hour + 1;
+                const timeSlot = `${hour.toString().padStart(2, '0')}:00-${nextHour.toString().padStart(2, '0')}:00`;
+                const isBooked = bookedSlots.includes(timeSlot);
                 
-                for (let hour = openHour; hour < closeHour; hour++) {
-                    const timeSlot = `${hour.toString().padStart(2, '0')}:00-${(hour + 1).toString().padStart(2, '0')}:00`;
-                    const isBooked = bookedSlots.includes(timeSlot);
-                    
-                    slotsHtml += `
-                        <div class="slot ${isBooked ? 'booked' : 'available'}" 
-                             ${!isBooked ? `onclick="toggleSlot('${timeSlot}')"` : ''}
-                             data-slot="${timeSlot}">
-                            ${formatTimeSlot(timeSlot)}
-                        </div>
-                    `;
-                }
+                slotsHtml += `
+                    <div class="slot ${isBooked ? 'booked' : 'available'}" 
+                         ${!isBooked ? `onclick="toggleSlot('${timeSlot}')"` : ''}
+                         data-slot="${timeSlot}">
+                        ${formatTimeSlot(timeSlot)}
+                    </div>
+                `;
+            }
+        } else {
+            // Normal case: same day operations (e.g., 6 AM to 10 PM)
+            for (let hour = openHour; hour < closeHour; hour++) {
+                const timeSlot = `${hour.toString().padStart(2, '0')}:00-${(hour + 1).toString().padStart(2, '0')}:00`;
+                const isBooked = bookedSlots.includes(timeSlot);
                 
-                slotsHtml += '</div>';
-                container.innerHTML = slotsHtml;
-                selectedSlots = [];
-                updateBookingControls();
-            } catch (error) {
-                console.error('Error displaying slots:', error);
-                showError('slotsContainer', 'Error displaying slots. Please try again.', 'loadAvailableSlots()');
+                slotsHtml += `
+                    <div class="slot ${isBooked ? 'booked' : 'available'}" 
+                         ${!isBooked ? `onclick="toggleSlot('${timeSlot}')"` : ''}
+                         data-slot="${timeSlot}">
+                        ${formatTimeSlot(timeSlot)}
+                    </div>
+                `;
             }
         }
+        
+        slotsHtml += '</div>';
+        container.innerHTML = slotsHtml;
+        selectedSlots = [];
+        updateBookingControls();
+    } catch (error) {
+        console.error('Error displaying slots:', error);
+        showError('slotsContainer', 'Error displaying slots. Please try again.', 'loadAvailableSlots()');
+    }
+}
+
 
         function toggleSlot(slot) {
             try {
@@ -2146,9 +2224,29 @@ function formatTime(time) {
 
 
         function formatTimeSlot(timeSlot) {
-            const [start, end] = timeSlot.split('-');
-            return `${formatTime(start)} - ${formatTime(end)}`;
-        }
+    const [start, end] = timeSlot.split('-');
+    return `${formatTime(start)} - ${formatTime(end)}`;
+}
+
+// Update the formatTime function to handle midnight
+function formatTime(time) {
+    if (!time) return 'N/A';
+    
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    
+    // Handle special cases
+    if (hour === 0) {
+        return `12:${minutes} AM`; // Midnight
+    } else if (hour < 12) {
+        return `${hour}:${minutes} AM`;
+    } else if (hour === 12) {
+        return `12:${minutes} PM`; // Noon
+    } else {
+        return `${hour - 12}:${minutes} PM`;
+    }
+}
+
 
         function formatTimeSlots(timeSlotsStr) {
             if (!timeSlotsStr) return 'N/A';
