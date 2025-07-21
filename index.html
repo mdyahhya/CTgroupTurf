@@ -11,7 +11,11 @@
     <meta name="apple-mobile-web-app-title" content="Turf Booking">
     <meta name="msapplication-TileColor" content="#667eea">
     <meta name="description" content="Book your favorite turf slots easily and quickly">
-    
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+
     <!-- Manifest -->
     <link rel="manifest" href="manifest.json">
     
@@ -896,7 +900,7 @@ body {
 <div class="container">
     <!-- Login Modal -->
      <div class="app-header">
-        <h1 class="main-title">Turf Bookings - Solapur</h1>
+        <h1 class="main-title">Turf Bookings in Solapur</h1>
         <p class="company-subtitle">By Continental Group</p>
     </div>
     <div id="loginModal" class="modal">
@@ -2298,6 +2302,43 @@ function formatTime(time) {
                 }
             }
         });
+
+
+
+        // Add this to your existing Service Worker registration code
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', async () => {
+        try {
+            const registration = await navigator.serviceWorker.register('/sw.js');
+            
+            // Force update check
+            registration.update();
+            
+            // Handle updates
+            registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        // Force reload for new version
+                        if (confirm('New version available! Update now?')) {
+                            newWorker.postMessage({ action: 'skipWaiting' });
+                            window.location.reload();
+                        }
+                    }
+                });
+            });
+        } catch (error) {
+            console.log('ServiceWorker registration failed:', error);
+        }
+    });
+}
+
+// Handle Service Worker updates
+navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload();
+});
+
+
 
         // Clear cache periodically
         setInterval(() => {
