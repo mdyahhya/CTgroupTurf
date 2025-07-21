@@ -1,0 +1,2011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Turf Booking">
+    <meta name="msapplication-TileColor" content="#667eea">
+    <meta name="description" content="Book your favorite turf slots easily and quickly">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512x512.png">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <title>Turf Booking System</title>
+    <style>
+        /* Mobile Container - Hidden by default */
+/* .mobile-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 375px;
+    height: 770px;
+    background: #000;
+    border-radius: 25px;
+    padding: 20px 10px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: none; 
+    overflow: hidden;
+} */
+
+.container {
+    width: 100vw;
+    max-width: 375px;
+    height: 100vh;
+    max-height: 770px;
+    margin: 0 auto;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: auto;
+    position: relative;
+    border-radius: 0;
+}
+/* Custom scrollbar for container */
+.container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.container::-webkit-scrollbar-thumb {
+    background: rgba(102, 126, 234, 0.3);
+    border-radius: 10px;
+}
+
+.container::-webkit-scrollbar-thumb:hover {
+    background: rgba(102, 126, 234, 0.5);
+}
+
+
+
+/* Updated turfs grid for 2 columns */
+.turfs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 0;
+}
+
+.turf-card {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
+}
+
+.turf-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.turf-image {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+}
+
+.turf-info {
+    padding: 10px;
+}
+
+.turf-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+    line-height: 1.2;
+}
+
+.turf-price {
+    font-size: 13px;
+    color: #667eea;
+    font-weight: 600;
+}
+
+/* Custom scrollbar */
+.container > *::-webkit-scrollbar {
+    width: 4px;
+}
+
+.container > *::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.container > *::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+}
+
+.container > *::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+
+/* Reset and base styles for mobile */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 5% auto;
+    padding: 20px;
+    border-radius: 15px;
+    width: 95%;
+    max-width: 350px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    position: absolute;
+    right: 15px;
+    top: 10px;
+}
+
+.close:hover {
+    color: #333;
+}
+
+/* Login Modal Styles */
+#loginTitle {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 20px;
+}
+
+.modal input {
+    width: 100%;
+    padding: 10px 12px;
+    margin: 8px 0;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.modal input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.modal button {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    margin: 10px 0;
+}
+
+.modal button:hover {
+    transform: translateY(-1px);
+}
+
+.modal p {
+    text-align: center;
+    margin-top: 15px;
+    color: #666;
+    font-size: 13px;
+}
+
+/* Main Content */
+#mainContent {
+    padding: 15px 10px;
+}
+
+/* Header */
+.header {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.nav-tabs {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.nav-tab {
+    padding: 8px 16px;
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    flex: 1;
+    text-align: center;
+    min-width: 80px;
+}
+
+.nav-tab:hover {
+    background-color: rgba(102, 126, 234, 0.1);
+}
+
+.nav-tab.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.user-info {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.user-info span {
+    font-weight: 600;
+    color: #333;
+    font-size: 13px;
+}
+
+.user-info button {
+    padding: 6px 12px;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+/* Tab Content */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Search Section */
+.search-section {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.search-bar {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.search-bar:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+
+
+
+
+/* My Bookings */
+.my-bookings {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 20px 15px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.my-bookings h2 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 20px;
+}
+
+.booking-item {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border-left: 4px solid #667eea;
+}
+
+.booking-item h4 {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.booking-item p {
+    margin: 5px 0;
+    line-height: 1.4;
+    font-size: 13px;
+}
+
+/* Status Colors */
+.status-pending {
+    color: #f39c12;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-confirmed {
+    color: #27ae60;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-rejected {
+    color: #e74c3c;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* Turf Detail Modal */
+.turf-detail-modal .modal-content {
+    max-width: 350px;
+    width: 95%;
+    max-height: 95vh;
+}
+
+.turf-detail-content h2 {
+    color: #333;
+    margin: 15px 0;
+    font-size: 22px;
+}
+
+.turf-detail-content p {
+    margin: 8px 0;
+    line-height: 1.5;
+    font-size: 14px;
+}
+
+/* Image Slider */
+.image-slider-container {
+    margin-bottom: 15px;
+}
+
+.image-slider {
+    position: relative;
+    height: 200px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f0f0f0;
+}
+
+.slider-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.slider-image.active {
+    opacity: 1;
+}
+
+/* Slider Controls */
+.slider-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.slider-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.slider-btn:hover {
+    background: #5a6fd8;
+    transform: translateY(-1px);
+}
+
+.slider-btn svg {
+    width: 12px;
+    height: 12px;
+}
+
+.image-counter {
+    background: rgba(102, 126, 234, 0.1);
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #667eea;
+    min-width: 50px;
+    text-align: center;
+}
+
+/* Booking Section */
+.booking-section {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
+.booking-section h3 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+.booking-section input[type="date"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #e1e5e9;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+/* Slots Grid */
+.slots-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin: 15px 0;
+}
+
+.slot {
+    padding: 10px 6px;
+    text-align: center;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.slot.available {
+    background: #e8f5e8;
+    color: #27ae60;
+    border: 2px solid #27ae60;
+}
+
+.slot.available:hover {
+    background: #27ae60;
+    color: white;
+}
+
+.slot.selected {
+    background: #667eea;
+    color: white;
+    border: 2px solid #667eea;
+}
+
+.slot.booked {
+    background: #f8d7da;
+    color: #e74c3c;
+    border: 2px solid #e74c3c;
+    cursor: not-allowed;
+}
+
+/* Booking Controls */
+#bookingControls {
+    background: white;
+    padding: 15px;
+    border-radius: 6px;
+    margin-top: 15px;
+    border: 2px solid #e1e5e9;
+}
+
+#bookingControls p {
+    margin: 8px 0;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+#bookingControls button {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+/* Loading and Error States */
+.loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+    flex-direction: column;
+}
+
+.spinner {
+    width: 30px;
+    height: 30px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    margin-top: 10px;
+    color: #666;
+    font-size: 14px;
+}
+
+.error-message {
+    text-align: center;
+    color: #e74c3c;
+    background: #ffeaea;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+    font-size: 14px;
+}
+
+.retry-btn {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 8px;
+    font-size: 12px;
+}
+
+/* Custom scrollbar */
+.container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.container::-webkit-scrollbar-thumb {
+    background: rgba(102, 126, 234, 0.3);
+    border-radius: 10px;
+}
+
+.container::-webkit-scrollbar-thumb:hover {
+    background: rgba(102, 126, 234, 0.5);
+}
+
+
+
+
+
+.user-name-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-info {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.user-info span {
+    font-weight: 600;
+    color: #333;
+    font-size: 13px;
+}
+
+.edit-profile-btn {
+    padding: 4px !important;
+    background: white;
+    color: black !important;
+    border: none !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 24px !important;
+    height: 24px !important;
+    transition: all 0.3s ease !important;
+}
+
+.edit-profile-btn:hover {
+    transform: translateY(-1px) scale(1.1) !important;
+    box-shadow: 0 3px 10px rgba(155, 89, 182, 0.4) !important;
+}
+
+.edit-profile-btn svg {
+    width: 14px !important;
+    height: 14px !important;
+}
+
+.user-info button:last-child {
+    padding: 6px 12px;
+    background: transparent;
+    color: black;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+
+
+
+/* Update login modal to be more persistent */
+#loginModal.modal {
+    pointer-events: all !important;
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+#loginModal .modal-content {
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5) !important;
+    border: 2px solid rgba(102, 126, 234, 0.3) !important;
+}
+
+/* Hide main content completely when not logged in */
+#mainContent {
+    display: none;
+}
+
+/* Ensure body background is visible when logged out */
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    min-height: 100vh;
+}
+
+
+/* Make login modal unclickable background */
+#loginModal {
+    pointer-events: all !important;
+    background-color: rgba(0, 0, 0, 0.9) !important;
+    backdrop-filter: blur(15px) !important;
+}
+
+#loginModal .modal-content {
+    pointer-events: all !important;
+    position: relative !important;
+    animation: none !important;
+}
+
+/* Prevent any accidental closing */
+#loginModal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: all;
+    z-index: -1;
+}
+
+
+    </style>
+</head>
+<body>
+    
+<div class="container">
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            
+            <h2 id="loginTitle">Login</h2>
+            <div id="loginForm">
+                <input type="text" id="loginPhone" placeholder="Phone Number" required>
+                <input type="password" id="loginPassword" placeholder="Password" required>
+                <button onclick="login()">Login</button>
+                <p>Don't have an account? <span onclick="showRegister()" style="color: blue; cursor: pointer;">Register</span></p>
+            </div>
+            <div id="registerForm" style="display: none;">
+                <input type="text" id="registerName" placeholder="Full Name" required>
+                <input type="text" id="registerPhone" placeholder="Phone Number" required>
+                <input type="password" id="registerPassword" placeholder="Password" required>
+                <button onclick="register()">Register</button>
+                <p>Already have an account? <span onclick="showLogin()" style="color: blue; cursor: pointer;">Login</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" style="display: none;">
+        <!-- Header -->
+        <div class="header">
+            <div class="nav-tabs">
+                <div class="nav-tab active" onclick="showTab('turfs')">Turfs</div>
+                <div class="nav-tab" onclick="showTab('bookings')">My Bookings</div>
+                <div class="user-info">
+    <div class="user-name-container">
+  <span id="userName"></span>
+  <button onclick="showEditProfile()" class="edit-profile-btn" title="Edit Profile">
+    <!-- Correct Pencil Square Icon -->
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+      <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+      <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5h6a.5.5 0 0 0 0-1h-6A1.5 1.5 0 0 0 1 2.5z"/>
+    </svg>
+  </button>
+</div>
+<button onclick="logout()">Logout</button>
+
+
+
+
+            </div>
+            <div id="turfsTab" class="tab-content active">
+            <div class="search-section">
+                <input type="text" id="searchBar" class="search-bar" placeholder="Search turfs..." oninput="searchTurfs()">
+            </div>
+            <div id="turfsGrid" class="turfs-grid"></div>
+        </div>
+        </div>
+
+        <!-- Turfs Tab -->
+        <!-- <div id="turfsTab" class="tab-content active">
+            <div class="search-section">
+                <input type="text" id="searchBar" class="search-bar" placeholder="Search turfs..." oninput="searchTurfs()">
+            </div>
+            <div id="turfsGrid" class="turfs-grid"></div>
+        </div> -->
+
+        <!-- Bookings Tab -->
+        <div id="bookingsTab" class="tab-content">
+            <div class="my-bookings">
+                <h2>My Bookings</h2>
+                <div id="userBookings"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Turf Detail Modal -->
+    <div id="turfDetailModal" class="modal turf-detail-modal">
+        <div class="modal-content turf-detail-content">
+            <span class="close" onclick="closeModal('turfDetailModal')">&times;</span>
+            <div id="turfDetailContent"></div>
+        </div>
+    </div>
+<!-- Edit Profile Modal -->
+<div id="editProfileModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('editProfileModal')">&times;</span>
+        <h2>Edit Profile</h2>
+        <form id="editProfileForm">
+            <input type="text" id="editFullName" placeholder="Full Name" required>
+            <input type="text" id="editPhone" placeholder="Phone Number" required readonly>
+            <input type="password" id="currentPassword" placeholder="Current Password" required>
+            <input type="password" id="newPassword" placeholder="New Password (optional)">
+            <button type="submit">Update Profile</button>
+        </form>
+    </div>
+</div>
+
+</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Global variables
+        let currentUser = null;
+        let turfs = [];
+        let bookings = [];
+        let selectedSlots = [];
+        let selectedDate = '';
+        let currentTurf = null;
+        let currentImageIndex = 0;
+        
+        // Performance optimization variables
+        let isLoading = false;
+        let dataCache = new Map();
+        let cacheExpiry = 5 * 60 * 1000; // 5 minutes
+        let debounceTimer = null;
+
+        // Supabase configuration
+        const SUPABASE_URL = 'https://ktqwhwzbxyoplawjmbao.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0cXdod3pieHlvcGxhd2ptYmFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwMzQ2ODgsImV4cCI6MjA2ODYxMDY4OH0.mo0mu-k3b_saK3I4gAGr4OIZcGZdRF5ogFMTqeijKas';
+        let supabase;
+
+        // Initialize Supabase client with retry logic
+        function initializeSupabase() {
+            try {
+                console.log("Initializing Supabase client...");
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                    auth: {
+                        persistSession: false
+                    }
+                });
+                return true;
+            } catch (error) {
+                console.error('Error initializing Supabase:', error);
+                return false;
+            }
+        }
+
+        // Cache management
+        function getCachedData(key) {
+            const cached = dataCache.get(key);
+            if (cached && (Date.now() - cached.timestamp) < cacheExpiry) {
+                return cached.data;
+            }
+            return null;
+        }
+
+        function setCachedData(key, data) {
+            dataCache.set(key, {
+                data: data,
+                timestamp: Date.now()
+            });
+        }
+
+        // Loading state management
+        function showLoading(containerId, message = 'Loading...') {
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.innerHTML = `
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                        <div class="loading-text">${message}</div>
+                    </div>
+                `;
+            }
+        }
+
+
+        function showEditProfile() {
+    if (!currentUser) {
+        alert('User information not available');
+        return;
+    }
+    
+    // Pre-fill the form with current user data
+    document.getElementById('editFullName').value = currentUser.full_name;
+    document.getElementById('editPhone').value = currentUser.phone;
+    document.getElementById('currentPassword').value = '';
+    document.getElementById('newPassword').value = '';
+    
+    showModal('editProfileModal');
+}
+
+// Handle edit profile form submission
+document.getElementById('editProfileForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const fullName = document.getElementById('editFullName').value.trim();
+    const currentPassword = document.getElementById('currentPassword').value.trim();
+    const newPassword = document.getElementById('newPassword').value.trim();
+
+    if (!fullName || !currentPassword) {
+        alert('Please fill in all required fields');
+        return;
+    }
+
+    if (fullName.length < 2) {
+        alert('Full name must be at least 2 characters long');
+        return;
+    }
+
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Updating...';
+    submitBtn.disabled = true;
+
+    try {
+        // Verify current password first
+        const { data: userCheck, error: verifyError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('phone', currentUser.phone)
+            .eq('password', currentPassword)
+            .limit(1);
+
+        if (verifyError) {
+            console.error('Password verification error:', verifyError);
+            alert('Failed to verify current password. Please try again.');
+            return;
+        }
+
+        if (!userCheck || userCheck.length === 0) {
+            alert('Current password is incorrect');
+            return;
+        }
+
+        // Prepare update data
+        const updateData = {
+            full_name: fullName
+        };
+
+        // Add new password if provided
+        if (newPassword) {
+            if (newPassword.length < 6) {
+                alert('New password must be at least 6 characters long');
+                return;
+            }
+            updateData.password = newPassword;
+        }
+
+        // Update user profile
+        const { data, error } = await supabase
+            .from('users')
+            .update(updateData)
+            .eq('phone', currentUser.phone)
+            .select();
+
+        if (error) {
+            console.error('Profile update error:', error);
+            alert(`Failed to update profile: ${error.message}`);
+            return;
+        }
+
+        // Update current user object and localStorage
+        currentUser.full_name = fullName;
+        if (newPassword) {
+            currentUser.password = newPassword;
+        }
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+        // Update UI
+        document.getElementById('userName').textContent = currentUser.full_name;
+        
+        alert('Profile updated successfully!');
+        closeModal('editProfileModal');
+        
+        // Clear form
+        this.reset();
+
+    } catch (error) {
+        console.error('Profile update error:', error);
+        alert('Failed to update profile. Please check your connection and try again.');
+    } finally {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    }
+});
+
+
+
+
+        function showError(containerId, message, retryCallback = null) {
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.innerHTML = `
+                    <div class="error-message">
+                        <p>${message}</p>
+                        ${retryCallback ? '<button class="retry-btn" onclick="' + retryCallback + '">Retry</button>' : ''}
+                    </div>
+                `;
+            }
+        }
+
+        // Debounce function for search
+        function debounce(func, wait) {
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(debounceTimer);
+                    func(...args);
+                };
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(later, wait);
+            };
+        }
+
+        // Initialize app with better error handling
+        window.onload = async function() {
+            try {
+                if (initializeSupabase()) {
+                    await checkAuth();
+                } else {
+                    showError('turfsGrid', 'Failed to initialize database connection', 'location.reload()');
+                }
+            } catch (error) {
+                console.error('App initialization error:', error);
+                showError('turfsGrid', 'Application failed to start. Please refresh the page.', 'location.reload()');
+            }
+        };
+
+        async function checkAuth() {
+    try {
+        const user = localStorage.getItem('currentUser');
+        if (user) {
+            currentUser = JSON.parse(user);
+            await showMainContent();
+        } else {
+            showModal('loginModal');
+            lockLoginModal(); // Add this line
+        }
+    } catch (error) {
+        console.error('Auth check error:', error);
+        localStorage.removeItem('currentUser');
+        showModal('loginModal');
+        lockLoginModal(); // Add this line
+    }
+}
+
+
+        function showLogin() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginTitle').textContent = 'Login';
+        }
+
+        function showRegister() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('loginTitle').textContent = 'Register';
+        }
+
+        async function login() {
+            const phone = document.getElementById('loginPhone').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+
+            if (!phone || !password) {
+                alert('Please fill all fields');
+                return;
+            }
+
+            const loginBtn = event.target;
+            const originalText = loginBtn.textContent;
+            loginBtn.textContent = 'Logging in...';
+            loginBtn.disabled = true;
+
+            try {
+                const { data: users, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('phone', phone)
+                    .eq('password', password)
+                    .limit(1);
+
+                if (error) {
+                    console.error('Login error:', error);
+                    alert('Login failed. Please try again.');
+                    return;
+                }
+                
+                if (users && users.length > 0) {
+                    currentUser = users[0];
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    closeModal('loginModal');
+                    await showMainContent();
+                } else {
+                    alert('Invalid credentials');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Login failed. Please check your connection and try again.');
+            } finally {
+                loginBtn.textContent = originalText;
+                loginBtn.disabled = false;
+            }
+        }
+
+        async function register() {
+            const name = document.getElementById('registerName').value.trim();
+            const phone = document.getElementById('registerPhone').value.trim();
+            const password = document.getElementById('registerPassword').value.trim();
+
+            if (!name || !phone || !password) {
+                alert('Please fill all fields');
+                return;
+            }
+
+            if (phone.length < 10) {
+                alert('Please enter a valid phone number');
+                return;
+            }
+
+            const registerBtn = event.target;
+            const originalText = registerBtn.textContent;
+            registerBtn.textContent = 'Registering...';
+            registerBtn.disabled = true;
+
+            try {
+                // Check if user already exists
+                const { data: existingUsers, error: checkError } = await supabase
+                    .from('users')
+                    .select('phone')
+                    .eq('phone', phone)
+                    .limit(1);
+
+                if (checkError) {
+                    console.error('Registration check error:', checkError);
+                    alert('Registration failed. Please try again.');
+                    return;
+                }
+
+                if (existingUsers && existingUsers.length > 0) {
+                    alert('User with this phone number already exists');
+                    return;
+                }
+
+                const { data, error } = await supabase
+                    .from('users')
+                    .insert([{
+                        full_name: name,
+                        phone: phone,
+                        password: password
+                    }])
+                    .select();
+
+                if (error) {
+                    console.error('Registration error:', error);
+                    alert('Registration failed. Please try again.');
+                    return;
+                }
+
+                alert('Registration successful! Please login.');
+                showLogin();
+                
+                // Clear form
+                document.getElementById('registerName').value = '';
+                document.getElementById('registerPhone').value = '';
+                document.getElementById('registerPassword').value = '';
+                
+            } catch (error) {
+                console.error('Registration error:', error);
+                alert('Registration failed. Please check your connection and try again.');
+            } finally {
+                registerBtn.textContent = originalText;
+                registerBtn.disabled = false;
+            }
+        }
+
+        function logout() {
+    localStorage.removeItem('currentUser');
+    currentUser = null;
+    dataCache.clear();
+    document.getElementById('mainContent').style.display = 'none';
+    showModal('loginModal');
+    lockLoginModal(); // Add this line
+}
+
+
+        async function showMainContent() {
+            try {
+                document.getElementById('mainContent').style.display = 'block';
+                document.getElementById('userName').textContent = currentUser.full_name;
+                
+                // Load data concurrently but with loading states
+                await Promise.all([
+                    loadTurfs(),
+                    loadUserBookings()
+                ]);
+            } catch (error) {
+                console.error('Error showing main content:', error);
+                showError('turfsGrid', 'Failed to load content. Please try again.', 'showMainContent()');
+            }
+        }
+
+        async function loadTurfs() {
+            if (isLoading) return;
+            
+            try {
+                // Check cache first
+                const cachedTurfs = getCachedData('turfs');
+                if (cachedTurfs) {
+                    turfs = cachedTurfs;
+                    displayTurfs(turfs);
+                    return;
+                }
+
+                isLoading = true;
+                showLoading('turfsGrid', 'Loading turfs...');
+
+                const { data: turfsData, error } = await supabase
+                    .from('turfs')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    console.error('Error loading turfs:', error);
+                    showError('turfsGrid', 'Failed to load turfs. Please try again.', 'loadTurfs()');
+                    return;
+                }
+
+                turfs = turfsData || [];
+                setCachedData('turfs', turfs);
+                displayTurfs(turfs);
+
+            } catch (error) {
+                console.error('Error loading turfs:', error);
+                showError('turfsGrid', 'Network error. Please check your connection and try again.', 'loadTurfs()');
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        function displayTurfs(turfsList) {
+            const grid = document.getElementById('turfsGrid');
+            
+            if (!turfsList || turfsList.length === 0) {
+                grid.innerHTML = '<div class="error-message"><p>No turfs available at the moment.</p></div>';
+                return;
+            }
+
+            // Use document fragment for better performance
+            const fragment = document.createDocumentFragment();
+
+            turfsList.forEach(turf => {
+                const images = turf.image_urls ? turf.image_urls.split(',').map(img => img.trim()).filter(img => img) : [];
+                const defaultImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjZjBmMGYwIi8+CjxwYXRoIGQ9Ik0xNTAgMTAwTDEyNSA4NUwxNzUgODVMMTUwIDEwMFoiIGZpbGw9IiNjY2MiLz4KPHRLEHU+Tm8gSW1hZ2U8L3RleHQ+Cjwvc3ZnPgo=';
+                
+                const turfCard = document.createElement('div');
+                turfCard.className = 'turf-card';
+                turfCard.onclick = () => showTurfDetail(turf);
+
+                turfCard.innerHTML = `
+                    <img src="${images[0] || defaultImage}" alt="${turf.name}" class="turf-image" 
+                         onerror="this.src='${defaultImage}'">
+                    <div class="turf-info">
+                        <div class="turf-name">${turf.name}</div>
+                        <div class="turf-price">₹${turf.price}/hour</div>
+                    </div>
+                `;
+
+                fragment.appendChild(turfCard);
+            });
+
+            grid.innerHTML = '';
+            grid.appendChild(fragment);
+        }
+
+        // Debounced search function
+        const searchTurfs = debounce(function() {
+            const query = document.getElementById('searchBar').value.toLowerCase().trim();
+            
+            if (!query) {
+                displayTurfs(turfs);
+                return;
+            }
+
+            const filteredTurfs = turfs.filter(turf => 
+                turf.name.toLowerCase().includes(query) || 
+                turf.description.toLowerCase().includes(query)
+            );
+            
+            displayTurfs(filteredTurfs);
+        }, 300);
+
+        function showTurfDetail(turf) {
+    try {
+        currentTurf = turf;
+        const images = turf.image_urls ? turf.image_urls.split(',').map(img => img.trim()).filter(img => img) : [];
+        const defaultImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjZjBmMGYwIi8+CjxwYXRoIGQ9Ik0xNTAgMTAwTDEyNSA4NUwxNzUgODVMMTUwIDEwMFoiIGZpbGw9IiNjY2MiLz4KPHRLEHU+Tm8gSW1hZ2U8L3RleHQ+Cjwvc3ZnPgo=';
+        currentImageIndex = 0;
+
+        if (images.length === 0) {
+            images.push(defaultImage);
+        }
+
+        const content = document.getElementById('turfDetailContent');
+        content.innerHTML = `
+            <div class="image-slider-container">
+                <div class="image-slider">
+                    ${images.map((img, index) => 
+                        `<img src="${img}" alt="${turf.name}" class="slider-image ${index === 0 ? 'active' : ''}" 
+                              onerror="this.src='${defaultImage}'">`
+                    ).join('')}
+                </div>
+                ${images.length > 1 ? `
+                    <div class="slider-controls">
+                        <button class="slider-btn prev-btn" onclick="changeImage(-1)">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15,18 9,12 15,6"></polyline>
+                            </svg>
+                        </button>
+                        <div class="image-counter">
+                            <span id="currentImageIndex">1</span> / ${images.length}
+                        </div>
+                        <button class="slider-btn next-btn" onclick="changeImage(1)">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9,6 15,12 9,18"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                ` : ''}
+            </div>
+            
+            <h2>${turf.name}</h2>
+            <p><strong>Price:</strong> ₹${turf.price}/hour</p>
+            <p><strong>Description:</strong> ${turf.description}</p>
+            <p><strong>Timings:</strong> ${formatTime(turf.opening_time)} - ${formatTime(turf.closing_time)}</p>
+
+            <div class="booking-section">
+                <h3>Book Slots</h3>
+                <input type="date" id="bookingDate" min="${new Date().toISOString().split('T')[0]}" 
+                       onchange="loadAvailableSlots()">
+                
+                <div id="slotsContainer">
+                    <p>Please select a date to view available slots</p>
+                </div>
+                
+                <div id="bookingControls" style="display: none;">
+                    <p>Selected slots: <span id="selectedSlotsCount">0</span></p>
+                    <p>Total price: ₹<span id="totalPrice">0</span></p>
+                    <button onclick="bookSlots()">Book Now</button>
+                </div>
+            </div>
+        `;
+
+        showModal('turfDetailModal');
+    } catch (error) {
+        console.error('Error showing turf detail:', error);
+        alert('Error loading turf details. Please try again.');
+    }
+}
+
+
+        function changeImage(direction) {
+    try {
+        const images = document.querySelectorAll('.slider-image');
+        if (images.length <= 1) return;
+
+        images[currentImageIndex].classList.remove('active');
+        
+        currentImageIndex += direction;
+        if (currentImageIndex >= images.length) currentImageIndex = 0;
+        if (currentImageIndex < 0) currentImageIndex = images.length - 1;
+        
+        images[currentImageIndex].classList.add('active');
+        
+        // Update counter
+        const counter = document.getElementById('currentImageIndex');
+        if (counter) {
+            counter.textContent = currentImageIndex + 1;
+        }
+    } catch (error) {
+        console.error('Error changing image:', error);
+    }
+}
+
+
+        // Add this debugging function to check database structure
+async function checkDatabaseStructure() {
+    try {
+        console.log('Checking database structure...');
+        
+        // Test turfs table
+        const { data: turfsTest, error: turfsError } = await supabase
+            .from('turfs')
+            .select('*')
+            .limit(1);
+            
+        console.log('Turfs test:', { data: turfsTest, error: turfsError });
+        
+        // Test bookings table
+        const { data: bookingsTest, error: bookingsError } = await supabase
+            .from('bookings')
+            .select('*')
+            .limit(1);
+            
+        console.log('Bookings test:', { data: bookingsTest, error: bookingsError });
+        
+        // Test users table
+        const { data: usersTest, error: usersError } = await supabase
+            .from('users')
+            .select('*')
+            .limit(1);
+            
+        console.log('Users test:', { data: usersTest, error: usersError });
+        
+    } catch (error) {
+        console.error('Database structure check failed:', error);
+    }
+}
+
+// Call this function after initializing Supabase (add to window.onload)
+window.onload = async function() {
+    try {
+        if (initializeSupabase()) {
+            // Add this line for debugging
+            if (window.location.search.includes('debug=1')) {
+                await checkDatabaseStructure();
+            }
+            await checkAuth();
+        } else {
+            showError('turfsGrid', 'Failed to initialize database connection', 'location.reload()');
+        }
+    } catch (error) {
+        console.error('App initialization error:', error);
+        showError('turfsGrid', 'Application failed to start. Please refresh the page.', 'location.reload()');
+    }
+};
+
+        function displaySlots(bookedSlots) {
+            try {
+                const container = document.getElementById('slotsContainer');
+                const [openHour] = currentTurf.opening_time.split(':').map(Number);
+                const [closeHour] = currentTurf.closing_time.split(':').map(Number);
+                
+                let slotsHtml = '<div class="slots-grid">';
+                
+                for (let hour = openHour; hour < closeHour; hour++) {
+                    const timeSlot = `${hour.toString().padStart(2, '0')}:00-${(hour + 1).toString().padStart(2, '0')}:00`;
+                    const isBooked = bookedSlots.includes(timeSlot);
+                    
+                    slotsHtml += `
+                        <div class="slot ${isBooked ? 'booked' : 'available'}" 
+                             ${!isBooked ? `onclick="toggleSlot('${timeSlot}')"` : ''}
+                             data-slot="${timeSlot}">
+                            ${formatTimeSlot(timeSlot)}
+                        </div>
+                    `;
+                }
+                
+                slotsHtml += '</div>';
+                container.innerHTML = slotsHtml;
+                selectedSlots = [];
+                updateBookingControls();
+            } catch (error) {
+                console.error('Error displaying slots:', error);
+                showError('slotsContainer', 'Error displaying slots. Please try again.', 'loadAvailableSlots()');
+            }
+        }
+
+        function toggleSlot(slot) {
+            try {
+                const slotElement = document.querySelector(`[data-slot="${slot}"]`);
+                
+                if (selectedSlots.includes(slot)) {
+                    selectedSlots = selectedSlots.filter(s => s !== slot);
+                    slotElement.classList.remove('selected');
+                } else {
+                    selectedSlots.push(slot);
+                    slotElement.classList.add('selected');
+                }
+                
+                updateBookingControls();
+            } catch (error) {
+                console.error('Error toggling slot:', error);
+            }
+        }
+
+        function updateBookingControls() {
+            try {
+                const controls = document.getElementById('bookingControls');
+                const count = document.getElementById('selectedSlotsCount');
+                const price = document.getElementById('totalPrice');
+                
+                if (count) count.textContent = selectedSlots.length;
+                if (price) price.textContent = selectedSlots.length * currentTurf.price;
+                
+                if (controls) {
+                    controls.style.display = selectedSlots.length > 0 ? 'block' : 'none';
+                }
+            } catch (error) {
+                console.error('Error updating booking controls:', error);
+            }
+        }
+
+        async function bookSlots() {
+    if (selectedSlots.length === 0 || !selectedDate) {
+        alert('Please select date and slots');
+        return;
+    }
+
+    const bookBtn = event.target;
+    const originalText = bookBtn.textContent;
+    bookBtn.textContent = 'Booking...';
+    bookBtn.disabled = true;
+
+    try {
+        // Validate required data
+        if (!currentTurf || !currentTurf.turf_id) {
+            alert('Turf information not available. Please try again.');
+            return;
+        }
+
+        if (!currentUser || !currentUser.phone) {
+            alert('User information not available. Please login again.');
+            return;
+        }
+
+        // Check for slot conflicts first
+        const { data: existingBookings, error: checkError } = await supabase
+            .from('bookings')
+            .select('time_slots')
+            .eq('turf_id', currentTurf.turf_id)
+            .eq('booking_date', selectedDate)
+            .in('status', ['confirmed', 'pending']);
+
+        if (checkError) {
+            console.error('Error checking slot availability:', checkError);
+            alert('Could not verify slot availability. Please try again.');
+            return;
+        }
+
+        // Check if any selected slots are already booked
+        const bookedSlots = [];
+        if (existingBookings) {
+            existingBookings.forEach(booking => {
+                if (booking.time_slots) {
+                    const slots = booking.time_slots.split(',').map(slot => slot.trim());
+                    bookedSlots.push(...slots);
+                }
+            });
+        }
+
+        // Update this part in bookSlots() function:
+const conflictingSlots = selectedSlots.filter(slot => {
+    return bookedSlots.some(bookedSlot => {
+        // Handle both array and string comparison
+        if (Array.isArray(bookedSlot)) {
+            return bookedSlot.includes(slot);
+        }
+        return bookedSlot === slot;
+    });
+});
+
+
+        // Prepare booking data with all required fields
+        // Change this part in the bookSlots() function:
+const bookingData = {
+    turf_id: parseInt(currentTurf.turf_id),
+    user_phone: currentUser.phone.toString(),
+    user_name: currentUser.full_name,
+    booking_date: selectedDate,
+    time_slots: selectedSlots, // Send as array instead of string
+    total_hours: selectedSlots.length,
+    total_price: selectedSlots.length * currentTurf.price,
+    status: 'pending'
+};
+
+
+        console.log('Booking data:', bookingData);
+
+        const { data, error } = await supabase
+            .from('bookings')
+            .insert([bookingData])
+            .select('*');
+
+        if (error) {
+            console.error('Detailed booking error:', error);
+            
+            // Handle specific error types
+            if (error.code === '23503') {
+                alert('Invalid turf or user data. Please refresh the page and try again.');
+            } else if (error.code === '23505') {
+                alert('This slot combination is already booked. Please select different slots.');
+            } else if (error.message.includes('violates')) {
+                alert('Database constraint violation. Please check your data and try again.');
+            } else {
+                alert(`Booking failed: ${error.message || 'Unknown error'}. Please try again.`);
+            }
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            alert('Booking was not saved properly. Please try again.');
+            return;
+        }
+
+        // Clear relevant caches
+        const cacheKey = `slots_${currentTurf.turf_id}_${selectedDate}`;
+        dataCache.delete(cacheKey);
+        dataCache.delete('userBookings');
+
+        alert('Booking request submitted successfully! Please wait for admin confirmation.');
+        closeModal('turfDetailModal');
+        
+        // Refresh bookings tab if it's active
+        const bookingsTab = document.getElementById('bookingsTab');
+        if (bookingsTab && bookingsTab.classList.contains('active')) {
+            await loadUserBookings();
+        }
+
+    } catch (error) {
+        console.error('Unexpected booking error:', error);
+        if (error.message.includes('fetch')) {
+            alert('Network error. Please check your internet connection and try again.');
+        } else {
+            alert('An unexpected error occurred. Please try again or contact support.');
+        }
+    } finally {
+        bookBtn.textContent = originalText;
+        bookBtn.disabled = false;
+    }
+}
+
+// Also update the loadAvailableSlots function to handle errors better
+async function loadAvailableSlots() {
+    selectedDate = document.getElementById('bookingDate').value;
+    if (!selectedDate) return;
+
+    try {
+        const cacheKey = `slots_${currentTurf.turf_id}_${selectedDate}`;
+        const cachedSlots = getCachedData(cacheKey);
+        
+        if (cachedSlots) {
+            displaySlots(cachedSlots);
+            return;
+        }
+
+        showLoading('slotsContainer', 'Loading available slots...');
+
+        const { data: dayBookings, error } = await supabase
+            .from('bookings')
+            .select('time_slots, status')
+            .eq('turf_id', currentTurf.turf_id)
+            .eq('booking_date', selectedDate)
+            .in('status', ['confirmed', 'pending']);
+
+        if (error) {
+            console.error('Error loading slots:', error);
+            showError('slotsContainer', 'Failed to load slots. Please try again.', 'loadAvailableSlots()');
+            return;
+        }
+
+        const bookedSlots = [];
+        if (dayBookings && dayBookings.length > 0) {
+            dayBookings.forEach(booking => {
+                if (booking.time_slots) {
+                    // Handle both array and string formats
+                    if (Array.isArray(booking.time_slots)) {
+                        bookedSlots.push(...booking.time_slots);
+                    } else {
+                        const slots = booking.time_slots.split(',').map(slot => slot.trim());
+                        bookedSlots.push(...slots);
+                    }
+                }
+            });
+        }
+
+        setCachedData(cacheKey, bookedSlots);
+        displaySlots(bookedSlots);
+
+    } catch (error) {
+        console.error('Error loading slots:', error);
+        showError('slotsContainer', 'Network error. Please try again.', 'loadAvailableSlots()');
+    }
+}
+
+
+
+        async function loadUserBookings() {
+            try {
+                const cachedBookings = getCachedData('userBookings');
+                if (cachedBookings) {
+                    bookings = cachedBookings;
+                    displayUserBookings();
+                    return;
+                }
+
+                showLoading('userBookings', 'Loading your bookings...');
+
+                const { data: bookingsData, error } = await supabase
+                    .from('bookings')
+                    .select(`
+                        *,
+                        turfs (name)
+                    `)
+                    .eq('user_phone', currentUser.phone)
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    console.error('Error loading bookings:', error);
+                    showError('userBookings', 'Failed to load bookings. Please try again.', 'loadUserBookings()');
+                    return;
+                }
+
+                bookings = bookingsData || [];
+                setCachedData('userBookings', bookings);
+                displayUserBookings();
+
+            } catch (error) {
+                console.error('Error loading bookings:', error);
+                showError('userBookings', 'Network error. Please try again.', 'loadUserBookings()');
+            }
+        }
+
+        function displayUserBookings() {
+    const container = document.getElementById('userBookings');
+    
+    if (!bookings || bookings.length === 0) {
+        container.innerHTML = '<div class="error-message"><p>No bookings found.</p></div>';
+        return;
+    }
+
+    const fragment = document.createDocumentFragment();
+
+    bookings.forEach(booking => {
+        const bookingItem = document.createElement('div');
+        bookingItem.className = 'booking-item';
+        
+        // Handle both array and string formats for time_slots
+        let timeSlotsDisplay = '';
+        if (Array.isArray(booking.time_slots)) {
+            timeSlotsDisplay = booking.time_slots.map(slot => formatTimeSlot(slot)).join(', ');
+        } else {
+            timeSlotsDisplay = formatTimeSlots(booking.time_slots);
+        }
+        
+        bookingItem.innerHTML = `
+            <h4>${booking.turfs ? booking.turfs.name : 'Unknown Turf'}</h4>
+            <p><strong>Date:</strong> ${formatDate(booking.booking_date)}</p>
+            <p><strong>Time Slots:</strong> ${timeSlotsDisplay}</p>
+            <p><strong>Total Hours:</strong> ${booking.total_hours}</p>
+            <p><strong>Total Price:</strong> ₹${booking.total_price}</p>
+            <p><strong>Status:</strong> <span class="status-${booking.status}">${booking.status}</span></p>
+            <p><strong>Booked on:</strong> ${formatDate(booking.created_at)}</p>
+        `;
+        fragment.appendChild(bookingItem);
+    });
+
+    container.innerHTML = '';
+    container.appendChild(fragment);
+}
+
+
+        function showTab(tabName) {
+            try {
+                // Hide all tabs
+                document.querySelectorAll('.tab-content').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                document.querySelectorAll('.nav-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+
+                // Show selected tab
+                document.getElementById(tabName + 'Tab').classList.add('active');
+                event.target.classList.add('active');
+
+                if (tabName === 'bookings') {
+                    loadUserBookings();
+                }
+            } catch (error) {
+                console.error('Error showing tab:', error);
+            }
+        }
+
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Update the closeModal function to prevent closing login modal
+function closeModal(modalId) {
+    // Prevent closing login modal if user is not logged in
+    if (modalId === 'loginModal' && !currentUser) {
+        return; // Don't close the modal
+    }
+    
+    document.getElementById(modalId).style.display = 'none';
+    document.body.classList.remove('modal-open');
+    const scrollY = document.body.style.top;
+    document.body.style.top = '';
+    window.scrollTo(0, parseInt(scrollY || '0') * -1);
+}
+
+// Update the window click handler to prevent closing login modal
+// Updated window click handler - completely prevent login modal from closing
+window.onclick = function(event) {
+    // If login modal is open and user is not logged in, don't close anything
+    const loginModal = document.getElementById('loginModal');
+    if (loginModal && loginModal.style.display === 'block' && !currentUser) {
+        event.preventDefault();
+        event.stopPropagation();
+        return false;
+    }
+    
+    // For other modals, close normally
+    if (event.target.classList.contains('modal') && event.target.id !== 'loginModal') {
+        event.target.style.display = 'none';
+        document.body.classList.remove('modal-open');
+        const scrollY = document.body.style.top;
+        document.body.style.top = '';
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+    }
+}
+// Add this function to completely lock the login modal
+function lockLoginModal() {
+    const loginModal = document.getElementById('loginModal');
+    if (loginModal && !currentUser) {
+        // Prevent all click events from bubbling up
+        loginModal.addEventListener('click', function(e) {
+            if (e.target === loginModal) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        });
+        
+        // Prevent modal content clicks from closing
+        const modalContent = loginModal.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
+    }
+}
+
+
+
+// Update keyboard event handler to prevent closing login modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal').forEach(modal => {
+            if (modal.style.display === 'block') {
+                // Don't close login modal if user is not logged in
+                if (modal.id === 'loginModal' && !currentUser) {
+                    return;
+                }
+                
+                modal.style.display = 'none';
+                document.body.classList.remove('modal-open');
+                const scrollY = document.body.style.top;
+                document.body.style.top = '';
+                window.scrollTo(0, parseInt(scrollY || '0') * -1);
+            }
+        });
+    }
+});
+
+
+        // Utility functions
+        function formatTime(time) {
+            if (!time) return 'N/A';
+            const [hours, minutes] = time.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        }
+
+        function formatTimeSlot(timeSlot) {
+            const [start, end] = timeSlot.split('-');
+            return `${formatTime(start)} - ${formatTime(end)}`;
+        }
+
+        function formatTimeSlots(timeSlotsStr) {
+            if (!timeSlotsStr) return 'N/A';
+            return timeSlotsStr.split(',').map(slot => formatTimeSlot(slot.trim())).join(', ');
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            return new Date(dateString).toLocaleDateString('en-IN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // Keyboard event handlers
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    if (modal.style.display === 'block') {
+                        modal.style.display = 'none';
+                        document.body.style.overflow = 'auto';
+                    }
+                });
+            }
+        });
+
+        // Handle Enter key in login forms
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const loginModal = document.getElementById('loginModal');
+                if (loginModal.style.display === 'block') {
+                    const loginForm = document.getElementById('loginForm');
+                    const registerForm = document.getElementById('registerForm');
+                    
+                    if (loginForm.style.display !== 'none') {
+                        login();
+                    } else if (registerForm.style.display !== 'none') {
+                        register();
+                    }
+                }
+            }
+        });
+
+        // Clear cache periodically
+        setInterval(() => {
+            const now = Date.now();
+            for (const [key, value] of dataCache.entries()) {
+                if (now - value.timestamp > cacheExpiry) {
+                    dataCache.delete(key);
+                }
+            }
+        }, cacheExpiry);
+
+        // Handle network errors gracefully
+        window.addEventListener('online', function() {
+            if (currentUser && turfs.length === 0) {
+                loadTurfs();
+            }
+        });
+
+        window.addEventListener('offline', function() {
+            console.log('App is now offline');
+        });
+    </script>
+</body>
+</html>
