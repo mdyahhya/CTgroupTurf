@@ -793,12 +793,68 @@ body {
     height: 14px;
 }
 
+
+.app-header {
+    text-align: center;
+    padding: 20px 15px 15px 15px;
+    background: rgba(255, 255, 255, 0.95);
+    margin-top: 10px;
+    border-radius: 12px;
+}
+
+.main-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.company-subtitle {
+    font-size: 14px;
+    color: #7f8c8d;
+    margin: 0;
+    font-weight: 500;
+    opacity: 0.8;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 375px) {
+    .main-title {
+        font-size: 18px;
+    }
+    
+    .company-subtitle {
+        font-size: 13px;
+    }
+    
+    .app-header {
+        padding: 15px 10px 12px 10px;
+    }
+}
+
+/* Alternative layout - if you want it as a separate section */
+.app-header-separate {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 20px 15px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+
     </style>
 </head>
 <body>
     
 <div class="container">
     <!-- Login Modal -->
+     <div class="app-header">
+        <h1 class="main-title">Turf Bookings in Solapur</h1>
+        <p class="company-subtitle">By Continental Group</p>
+    </div>
     <div id="loginModal" class="modal">
         <div class="modal-content">
             
@@ -1696,121 +1752,68 @@ window.addEventListener('offline', () => {
 
     try {
         // Validate required data
-        if (!currentTurf || !currentTurf.turf_id) {
-            alert('Turf information not available. Please try again.');
+        if (!currentTurf?.turf_id) {
+            alert('Turf information missing');
             return;
         }
 
-        if (!currentUser || !currentUser.phone) {
-            alert('User information not available. Please login again.');
+        if (!currentUser?.phone || !currentUser?.full_name) {
+            alert('User information missing');
             return;
         }
 
-        // Check for slot conflicts first
-        const { data: existingBookings, error: checkError } = await supabase
-            .from('bookings')
-            .select('time_slots')
-            .eq('turf_id', currentTurf.turf_id)
-            .eq('booking_date', selectedDate)
-            .in('status', ['confirmed', 'pending']);
+        // Ensure all data is in the correct format
+        const bookingData = {
+            turf_id: Number(currentTurf.turf_id),
+            user_phone: String(currentUser.phone).trim(),
+            user_name: String(currentUser.full_name).trim(),
+            booking_date: String(selectedDate),
+            time_slots: selectedSlots.join(','),
+            total_hours: Number(selectedSlots.length),
+            total_price: Number(selectedSlots.length * currentTurf.price),
+            status: 'pending'
+        };
 
-        if (checkError) {
-            console.error('Error checking slot availability:', checkError);
-            alert('Could not verify slot availability. Please try again.');
-            return;
-        }
-
-        // Check if any selected slots are already booked
-        const bookedSlots = [];
-        if (existingBookings) {
-            existingBookings.forEach(booking => {
-                if (booking.time_slots) {
-                    const slots = booking.time_slots.split(',').map(slot => slot.trim());
-                    bookedSlots.push(...slots);
-                }
-            });
-        }
-
-        // Update this part in bookSlots() function:
-const conflictingSlots = selectedSlots.filter(slot => {
-    return bookedSlots.some(bookedSlot => {
-        // Handle both array and string comparison
-        if (Array.isArray(bookedSlot)) {
-            return bookedSlot.includes(slot);
-        }
-        return bookedSlot === slot;
-    });
-});
-
-
-        // Prepare booking data with all required fields
-        // Change this part in the bookSlots() function:
-const bookingData = {
-    turf_id: parseInt(currentTurf.turf_id),
-    user_phone: currentUser.phone.toString(),
-    user_name: currentUser.full_name,
-    booking_date: selectedDate,
-    time_slots: selectedSlots, // Send as array instead of string
-    total_hours: selectedSlots.length,
-    total_price: selectedSlots.length * currentTurf.price,
-    status: 'pending'
-};
-
-
-        console.log('Booking data:', bookingData);
+        console.log('Sending booking data:', bookingData);
 
         const { data, error } = await supabase
             .from('bookings')
-            .insert([bookingData])
-            .select('*');
+            .insert([bookingData]);
 
         if (error) {
-            console.error('Detailed booking error:', error);
+            console.error('Booking error:', error);
             
-            // Handle specific error types
-            if (error.code === '23503') {
-                alert('Invalid turf or user data. Please refresh the page and try again.');
-            } else if (error.code === '23505') {
-                alert('This slot combination is already booked. Please select different slots.');
-            } else if (error.message.includes('violates')) {
-                alert('Database constraint violation. Please check your data and try again.');
+            // Check specific error details
+            if (error.code) {
+                alert(`Database error (${error.code}): ${error.message}`);
+            } else if (error.details) {
+                alert(`Error details: ${error.details}`);
             } else {
-                alert(`Booking failed: ${error.message || 'Unknown error'}. Please try again.`);
+                alert(`Booking failed: ${error.message}`);
             }
             return;
         }
 
-        if (!data || data.length === 0) {
-            alert('Booking was not saved properly. Please try again.');
-            return;
-        }
-
-        // Clear relevant caches
-        const cacheKey = `slots_${currentTurf.turf_id}_${selectedDate}`;
-        dataCache.delete(cacheKey);
-        dataCache.delete('userBookings');
-
-        alert('Booking request submitted successfully! Please wait for admin confirmation.');
+        alert('Booking request submitted successfully!');
         closeModal('turfDetailModal');
         
-        // Refresh bookings tab if it's active
-        const bookingsTab = document.getElementById('bookingsTab');
-        if (bookingsTab && bookingsTab.classList.contains('active')) {
-            await loadUserBookings();
+        // Clear cache and refresh
+        dataCache.delete(`slots_${currentTurf.turf_id}_${selectedDate}`);
+        dataCache.delete('userBookings');
+        
+        if (document.getElementById('bookingsTab').classList.contains('active')) {
+            loadUserBookings();
         }
 
     } catch (error) {
-        console.error('Unexpected booking error:', error);
-        if (error.message.includes('fetch')) {
-            alert('Network error. Please check your internet connection and try again.');
-        } else {
-            alert('An unexpected error occurred. Please try again or contact support.');
-        }
+        console.error('Catch block error:', error);
+        alert(`System error: ${error.message}`);
     } finally {
         bookBtn.textContent = originalText;
         bookBtn.disabled = false;
     }
 }
+
 
 // Also update the loadAvailableSlots function to handle errors better
 async function loadAvailableSlots() {
@@ -1848,7 +1851,7 @@ async function loadAvailableSlots() {
                     // Handle both array and string formats
                     if (Array.isArray(booking.time_slots)) {
                         bookedSlots.push(...booking.time_slots);
-                    } else {
+                    } else if (typeof booking.time_slots === 'string') {
                         const slots = booking.time_slots.split(',').map(slot => slot.trim());
                         bookedSlots.push(...slots);
                     }
@@ -1864,6 +1867,86 @@ async function loadAvailableSlots() {
         showError('slotsContainer', 'Network error. Please try again.', 'loadAvailableSlots()');
     }
 }
+// Add this function to debug the exact issue
+async function debugAndBook() {
+    console.log('=== BOOKING DEBUG INFO ===');
+    console.log('currentTurf:', currentTurf);
+    console.log('currentUser:', currentUser);
+    console.log('selectedSlots:', selectedSlots);
+    console.log('selectedDate:', selectedDate);
+    
+    if (!currentTurf || !currentUser) {
+        alert('Missing user or turf data');
+        return;
+    }
+
+    const bookingData = {
+        turf_id: parseInt(currentTurf.turf_id),
+        user_phone: String(currentUser.phone),
+        user_name: String(currentUser.full_name),
+        booking_date: String(selectedDate),
+        time_slots: String(selectedSlots.join(',')),
+        total_hours: parseInt(selectedSlots.length),
+        total_price: parseInt(selectedSlots.length * currentTurf.price),
+        status: 'pending'
+    };
+    
+    console.log('Prepared booking data:', bookingData);
+    console.log('Data types:', {
+        turf_id: typeof bookingData.turf_id,
+        user_phone: typeof bookingData.user_phone,
+        user_name: typeof bookingData.user_name,
+        booking_date: typeof bookingData.booking_date,
+        time_slots: typeof bookingData.time_slots,
+        total_hours: typeof bookingData.total_hours,
+        total_price: typeof bookingData.total_price,
+        status: typeof bookingData.status
+    });
+    
+    // Test the insert
+    try {
+        const { data, error } = await supabase
+            .from('bookings')
+            .insert([bookingData])
+            .select('*');
+        
+        console.log('Supabase response:', { data, error });
+        
+        if (error) {
+            console.error('Supabase error details:', error);
+            alert(`Error: ${JSON.stringify(error)}`);
+        } else {
+            console.log('Success:', data);
+            alert('Booking successful!');
+        }
+    } catch (err) {
+        console.error('Try-catch error:', err);
+        alert(`Catch error: ${err.message}`);
+    }
+}
+
+// Add this function for debugging
+async function debugBookingIssue() {
+    console.log('=== DEBUGGING BOOKING ISSUE ===');
+    console.log('Current User:', currentUser);
+    console.log('Current Turf:', currentTurf);
+    console.log('Selected Slots:', selectedSlots);
+    console.log('Selected Date:', selectedDate);
+    
+    // Test database connection
+    try {
+        const { data, error } = await supabase
+            .from('bookings')
+            .select('*')
+            .limit(1);
+        console.log('Database test:', { data, error });
+    } catch (err) {
+        console.error('Database connection error:', err);
+    }
+}
+
+// Call this before booking (temporarily for debugging)
+// debugBookingIssue();
 
 
 
