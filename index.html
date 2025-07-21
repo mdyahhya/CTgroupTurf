@@ -762,6 +762,37 @@ body {
 }
 
 
+
+
+.install-btn {
+    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.3s ease;
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(39, 174, 96, 0.3);
+}
+
+.install-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
+}
+
+.install-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
     </style>
 </head>
 <body>
@@ -1487,6 +1518,104 @@ window.onload = async function() {
         showError('turfsGrid', 'Application failed to start. Please refresh the page.', 'location.reload()');
     }
 };
+
+
+
+// Add this to your existing JavaScript, preferably after window.onload
+// PWA Installation and Service Worker Registration
+let deferredPrompt;
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', async () => {
+        try {
+            const registration = await navigator.serviceWorker.register('/sw.js');
+            console.log('ServiceWorker registered successfully:', registration.scope);
+            
+            // Update available
+            registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        // New version available
+                        if (confirm('New version available! Reload to update?')) {
+                            window.location.reload();
+                        }
+                    }
+                });
+            });
+        } catch (error) {
+            console.log('ServiceWorker registration failed:', error);
+        }
+    });
+}
+
+// PWA Install Prompt
+window.addEventListener('beforeinstallprompt', (e) => {
+    console.log('PWA install prompt triggered');
+    e.preventDefault();
+    deferredPrompt = e;
+    showInstallPrompt();
+});
+
+function showInstallPrompt() {
+    // Create install button (you can style this)
+    const installBtn = document.createElement('button');
+    installBtn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7,10 12,15 17,10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Install App
+    `;
+    installBtn.className = 'install-btn';
+    installBtn.addEventListener('click', installApp);
+    
+    // Add to header (or wherever you want)
+    const header = document.querySelector('.header');
+    if (header && deferredPrompt) {
+        header.appendChild(installBtn);
+    }
+}
+
+async function installApp() {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response to the install prompt: ${outcome}`);
+        deferredPrompt = null;
+        
+        // Remove install button
+        const installBtn = document.querySelector('.install-btn');
+        if (installBtn) {
+            installBtn.remove();
+        }
+    }
+}
+
+// Handle app installation
+window.addEventListener('appinstalled', (evt) => {
+    console.log('PWA was installed successfully');
+    // Remove install button if still visible
+    const installBtn = document.querySelector('.install-btn');
+    if (installBtn) {
+        installBtn.remove();
+    }
+});
+
+// Handle online/offline status
+window.addEventListener('online', () => {
+    console.log('App is online');
+    // Sync offline data if any
+});
+
+window.addEventListener('offline', () => {
+    console.log('App is offline');
+    // Show offline message
+});
+
+
 
         function displaySlots(bookedSlots) {
             try {
