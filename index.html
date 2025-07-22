@@ -12,6 +12,16 @@
     <meta name="msapplication-TileColor" content="#667eea">
     <meta name="description" content="Book your favorite turf slots easily and quickly">
 
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="cache-buster" content="<?= time() ?>">
+    
+    <!-- Force reload meta -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -892,6 +902,67 @@ body {
     z-index: 1;
 }
 
+/* Enhanced slot styling to show pricing clearly */
+.slot {
+    padding: 10px 8px;
+    text-align: center;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 500;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 60px;
+    justify-content: center;
+}
+
+.slot-time {
+    font-weight: 600;
+    font-size: 10px;
+    line-height: 1.2;
+}
+
+.slot-price {
+    font-size: 10px;
+    font-weight: 700;
+    opacity: 0.9;
+    color: inherit;
+}
+
+.slot.available {
+    background: #e8f5e8;
+    color: #27ae60;
+    border: 2px solid #27ae60;
+}
+
+.slot.available:hover {
+    background: #27ae60;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.slot.selected {
+    background: #667eea;
+    color: white;
+    border: 2px solid #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.slot.selected .slot-price {
+    opacity: 1;
+    font-weight: 800;
+}
+
+.slot.booked {
+    background: #f8d7da;
+    color: #e74c3c;
+    border: 2px solid #e74c3c;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
 
     </style>
 </head>
@@ -1518,7 +1589,7 @@ document.getElementById('editProfileForm').addEventListener('submit', async func
             </div>
             
             <h2>${turf.name}</h2>
-            <p><strong>Price:</strong> ₹${turf.price}/hour</p>
+            ${getPricingDisplayText(turf)}
             <p><strong>Description:</strong> ${turf.description}</p>
             <p><strong>Timings:</strong> ${formatTime(turf.opening_time)} - ${formatTime(turf.closing_time)}</p>
 
@@ -1545,6 +1616,28 @@ document.getElementById('editProfileForm').addEventListener('submit', async func
         alert('Error loading turf details. Please try again.');
     }
 }
+function getPricingDisplayText(turf) {
+    let pricingText = '';
+    
+    console.log('Turf pricing data:', turf); // Debug log
+    
+    // Day pricing
+    if (turf.day_price && turf.day_start_time && turf.day_end_time) {
+        pricingText += `<p><strong>Day Price:</strong> ₹${turf.day_price}/hour (${formatTime(turf.day_start_time)} - ${formatTime(turf.day_end_time)})</p>`;
+    }
+    
+    // Evening pricing
+    if (turf.evening_price && turf.evening_start_time && turf.evening_end_time) {
+        pricingText += `<p><strong>Evening Price:</strong> ₹${turf.evening_price}/hour (${formatTime(turf.evening_start_time)} - ${formatTime(turf.evening_end_time)})</p>`;
+    }
+    
+    // Fallback to single price if no time-based pricing
+    if (!pricingText && turf.price) {
+        pricingText = `<p><strong>Price:</strong> ₹${turf.price}/hour</p>`;
+    }
+    
+    return pricingText;
+}
 
 
         function changeImage(direction) {
@@ -1568,6 +1661,104 @@ document.getElementById('editProfileForm').addEventListener('submit', async func
     } catch (error) {
         console.error('Error changing image:', error);
     }
+}
+
+
+
+// Force cache bypass on every load
+(function() {
+    'use strict';
+    
+    // Clear all caches on load
+    if ('caches' in window) {
+        caches.keys().then(function(names) {
+            names.forEach(function(name) {
+                caches.delete(name);
+            });
+        });
+    }
+    
+    // Disable back/forward cache
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            window.location.reload();
+        }
+    });
+    
+    // Force reload if coming from cache
+    if (performance.navigation.type === performance.navigation.TYPE_BACK_FORWARD) {
+        window.location.reload(true);
+    }
+})();
+
+// Get price for specific turf and time slot
+function getPriceForTimeSlot(turf, timeSlot) {
+    const [startTime] = timeSlot.split('-');
+    const [hour, minute] = startTime.split(':').map(Number);
+    const slotMinutes = hour * 60 + minute;
+    
+    console.log(`Calculating price for slot: ${timeSlot}, hour: ${hour}`, turf);
+    
+    // Check day pricing FIRST (this fixes the morning slots issue)
+    if (turf.day_price && turf.day_start_time && turf.day_end_time) {
+        const dayStart = timeToMinutes(turf.day_start_time);
+        const dayEnd = timeToMinutes(turf.day_end_time);
+        
+        // For normal day ranges (e.g., 06:00 to 18:00)
+        if (dayEnd > dayStart) {
+            if (slotMinutes >= dayStart && slotMinutes < dayEnd) {
+                console.log(`Day price: ${turf.day_price}`);
+                return turf.day_price;
+            }
+        }
+        // For overnight day ranges (rare case)
+        else if (dayEnd < dayStart) {
+            if (slotMinutes >= dayStart || slotMinutes < dayEnd) {
+                console.log(`Day price (overnight): ${turf.day_price}`);
+                return turf.day_price;
+            }
+        }
+    }
+    
+    // Then check evening pricing
+    if (turf.evening_price && turf.evening_start_time && turf.evening_end_time) {
+        const eveningStart = timeToMinutes(turf.evening_start_time);
+        const eveningEnd = timeToMinutes(turf.evening_end_time);
+        
+        // For normal evening ranges (e.g., 18:00 to 23:59)
+        if (eveningEnd > eveningStart) {
+            if (slotMinutes >= eveningStart && slotMinutes < eveningEnd) {
+                console.log(`Evening price: ${turf.evening_price}`);
+                return turf.evening_price;
+            }
+        }
+        // For overnight evening ranges (e.g., 22:00 to 06:00)
+        else if (eveningEnd < eveningStart) {
+            if (slotMinutes >= eveningStart || slotMinutes < eveningEnd) {
+                console.log(`Evening price (overnight): ${turf.evening_price}`);
+                return turf.evening_price;
+            }
+        }
+    }
+    
+    // Fallback to single price or default
+    console.log(`Fallback price: ${turf.price || 500}`);
+    return turf.price || 500;
+}
+
+
+function timeToMinutes(timeString) {
+    if (!timeString) return 0;
+    const [hour, minute] = timeString.split(':').map(Number);
+    return hour * 60 + minute;
+}
+
+function isTimeInRange(currentMinutes, startMinutes, endMinutes) {
+    // Handle overnight ranges (e.g., 22:00 to 06:00)
+    if (endMinutes < startMinutes) {
+        return currentMinutes >= startMinutes || currentMinutes < endMinutes;
+    }
+    return currentMinutes >= startMinutes && currentMinutes < endMinutes;
 }
 
 
@@ -1729,49 +1920,34 @@ window.addEventListener('offline', () => {
         
         let slotsHtml = '<div class="slots-grid">';
         
-        // Handle overnight operations (e.g., 6 AM to 12 AM next day)
+        // Handle overnight operations
         if (closeHour <= openHour) {
-            // Case 1: From opening hour to midnight (23:00-24:00)
+            // From opening hour to midnight
             for (let hour = openHour; hour < 24; hour++) {
                 const timeSlot = `${hour.toString().padStart(2, '0')}:00-${(hour + 1).toString().padStart(2, '0')}:00`;
                 const isBooked = bookedSlots.includes(timeSlot);
+                const price = getPriceForTimeSlot(currentTurf, timeSlot);
                 
-                slotsHtml += `
-                    <div class="slot ${isBooked ? 'booked' : 'available'}" 
-                         ${!isBooked ? `onclick="toggleSlot('${timeSlot}')"` : ''}
-                         data-slot="${timeSlot}">
-                        ${formatTimeSlot(timeSlot)}
-                    </div>
-                `;
+                slotsHtml += createSlotHTML(timeSlot, isBooked, price);
             }
             
-            // Case 2: From midnight to closing hour
+            // From midnight to closing hour
             for (let hour = 0; hour < closeHour; hour++) {
                 const nextHour = hour + 1;
                 const timeSlot = `${hour.toString().padStart(2, '0')}:00-${nextHour.toString().padStart(2, '0')}:00`;
                 const isBooked = bookedSlots.includes(timeSlot);
+                const price = getPriceForTimeSlot(currentTurf, timeSlot);
                 
-                slotsHtml += `
-                    <div class="slot ${isBooked ? 'booked' : 'available'}" 
-                         ${!isBooked ? `onclick="toggleSlot('${timeSlot}')"` : ''}
-                         data-slot="${timeSlot}">
-                        ${formatTimeSlot(timeSlot)}
-                    </div>
-                `;
+                slotsHtml += createSlotHTML(timeSlot, isBooked, price);
             }
         } else {
-            // Normal case: same day operations (e.g., 6 AM to 10 PM)
+            // Normal case: same day operations
             for (let hour = openHour; hour < closeHour; hour++) {
                 const timeSlot = `${hour.toString().padStart(2, '0')}:00-${(hour + 1).toString().padStart(2, '0')}:00`;
                 const isBooked = bookedSlots.includes(timeSlot);
+                const price = getPriceForTimeSlot(currentTurf, timeSlot);
                 
-                slotsHtml += `
-                    <div class="slot ${isBooked ? 'booked' : 'available'}" 
-                         ${!isBooked ? `onclick="toggleSlot('${timeSlot}')"` : ''}
-                         data-slot="${timeSlot}">
-                        ${formatTimeSlot(timeSlot)}
-                    </div>
-                `;
+                slotsHtml += createSlotHTML(timeSlot, isBooked, price);
             }
         }
         
@@ -1783,6 +1959,19 @@ window.addEventListener('offline', () => {
         console.error('Error displaying slots:', error);
         showError('slotsContainer', 'Error displaying slots. Please try again.', 'loadAvailableSlots()');
     }
+}
+
+// Helper function to create slot HTML
+function createSlotHTML(timeSlot, isBooked, price) {
+    return `
+        <div class="slot ${isBooked ? 'booked' : 'available'}" 
+             ${!isBooked ? `onclick="toggleSlot('${timeSlot}')"` : ''}
+             data-slot="${timeSlot}"
+             data-price="${price}">
+            <div class="slot-time">${formatTimeSlot(timeSlot)}</div>
+            <div class="slot-price">₹${price}</div>
+        </div>
+    `;
 }
 
 
@@ -1805,27 +1994,68 @@ window.addEventListener('offline', () => {
         }
 
         function updateBookingControls() {
-            try {
-                const controls = document.getElementById('bookingControls');
-                const count = document.getElementById('selectedSlotsCount');
-                const price = document.getElementById('totalPrice');
-                
-                if (count) count.textContent = selectedSlots.length;
-                if (price) price.textContent = selectedSlots.length * currentTurf.price;
-                
-                if (controls) {
-                    controls.style.display = selectedSlots.length > 0 ? 'block' : 'none';
-                }
-            } catch (error) {
-                console.error('Error updating booking controls:', error);
+    try {
+        const controls = document.getElementById('bookingControls');
+        const count = document.getElementById('selectedSlotsCount');
+        const price = document.getElementById('totalPrice');
+        
+        if (count) count.textContent = selectedSlots.length;
+        
+        // Calculate total price with dynamic pricing
+        let totalPrice = 0;
+        selectedSlots.forEach(slot => {
+            const slotElement = document.querySelector(`[data-slot="${slot}"]`);
+            if (slotElement) {
+                const slotPrice = parseInt(slotElement.dataset.price);
+                totalPrice += slotPrice;
+                console.log(`Slot ${slot}: ₹${slotPrice}, Running total: ₹${totalPrice}`); // Debug log
+            } else {
+                // Fallback calculation if element not found
+                const fallbackPrice = getPriceForTimeSlot(currentTurf, slot);
+                totalPrice += fallbackPrice;
+                console.log(`Slot ${slot} (fallback): ₹${fallbackPrice}, Running total: ₹${totalPrice}`);
             }
+        });
+        
+        if (price) price.textContent = totalPrice;
+        
+        if (controls) {
+            controls.style.display = selectedSlots.length > 0 ? 'block' : 'none';
         }
+        
+        console.log(`Final total price: ₹${totalPrice} for ${selectedSlots.length} slots`); // Debug log
+    } catch (error) {
+        console.error('Error updating booking controls:', error);
+    }
+}
+
 
         async function bookSlots() {
     if (selectedSlots.length === 0 || !selectedDate) {
         alert('Please select date and slots');
         return;
     }
+
+    // Calculate total price with dynamic pricing
+    let totalPrice = 0;
+    const slotPrices = [];
+    
+    selectedSlots.forEach(slot => {
+        const slotElement = document.querySelector(`[data-slot="${slot}"]`);
+        let slotPrice;
+        
+        if (slotElement && slotElement.dataset.price) {
+            slotPrice = parseInt(slotElement.dataset.price);
+        } else {
+            // Fallback calculation
+            slotPrice = getPriceForTimeSlot(currentTurf, slot);
+        }
+        
+        totalPrice += slotPrice;
+        slotPrices.push({ slot, price: slotPrice });
+    });
+
+    console.log('Booking calculation:', slotPrices, 'Total:', totalPrice); // Debug log
 
     const bookBtn = event.target;
     const originalText = bookBtn.textContent;
@@ -1844,7 +2074,6 @@ window.addEventListener('offline', () => {
             return;
         }
 
-        // Ensure all data is in the correct format
         const bookingData = {
             turf_id: Number(currentTurf.turf_id),
             user_phone: String(currentUser.phone).trim(),
@@ -1852,7 +2081,7 @@ window.addEventListener('offline', () => {
             booking_date: String(selectedDate),
             time_slots: selectedSlots.join(','),
             total_hours: Number(selectedSlots.length),
-            total_price: Number(selectedSlots.length * currentTurf.price),
+            total_price: totalPrice, // Use calculated dynamic price
             status: 'pending'
         };
 
@@ -1864,15 +2093,7 @@ window.addEventListener('offline', () => {
 
         if (error) {
             console.error('Booking error:', error);
-            
-            // Check specific error details
-            if (error.code) {
-                alert(`Database error (${error.code}): ${error.message}`);
-            } else if (error.details) {
-                alert(`Error details: ${error.details}`);
-            } else {
-                alert(`Booking failed: ${error.message}`);
-            }
+            alert(`Booking failed: ${error.message}`);
             return;
         }
 
@@ -1895,7 +2116,6 @@ window.addEventListener('offline', () => {
         bookBtn.disabled = false;
     }
 }
-
 
 // Also update the loadAvailableSlots function to handle errors better
 async function loadAvailableSlots() {
