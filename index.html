@@ -12,12 +12,6 @@
     <meta name="msapplication-TileColor" content="#667eea">
     <meta name="description" content="Book your favorite turf slots easily and quickly">
 
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1190451753702067"
-     crossorigin="anonymous"></script>
-
-
-    <meta name="google-adsense-account" content="ca-pub-1190451753702067">
-    
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -977,7 +971,7 @@ body {
 <div class="container">
     <!-- Login Modal -->
      <div class="app-header">
-        <h1 class="main-title">Turf Bookings - Solapur</h1>
+        <h1 class="main-title">Turf Bookings in Solapur</h1>
         <p class="company-subtitle">By Continental Group</p>
     </div>
     <div id="loginModal" class="modal">
@@ -1322,6 +1316,7 @@ document.getElementById('editProfileForm').addEventListener('submit', async func
             document.getElementById('registerForm').style.display = 'block';
             document.getElementById('loginTitle').textContent = 'Register';
         }
+        
 
         async function login() {
             const phone = document.getElementById('loginPhone').value.trim();
@@ -2088,7 +2083,8 @@ function createSlotHTML(timeSlot, isBooked, price) {
             time_slots: selectedSlots.join(','),
             total_hours: Number(selectedSlots.length),
             total_price: totalPrice, // Use calculated dynamic price
-            status: 'pending'
+            status: 'pending',
+            booking_type: 'regular' // Add this line
         };
 
         console.log('Sending booking data:', bookingData);
@@ -2139,12 +2135,14 @@ async function loadAvailableSlots() {
 
         showLoading('slotsContainer', 'Loading available slots...');
 
+        // Load regular bookings
         const { data: dayBookings, error } = await supabase
             .from('bookings')
             .select('time_slots, status')
             .eq('turf_id', currentTurf.turf_id)
             .eq('booking_date', selectedDate)
-            .in('status', ['confirmed', 'pending']);
+            .in('status', ['confirmed', 'pending'])
+            .eq('status', 'confirmed'); // This will now include pre-bookings
 
         if (error) {
             console.error('Error loading slots:', error);
@@ -2152,11 +2150,17 @@ async function loadAvailableSlots() {
             return;
         }
 
-        const bookedSlots = [];
+        // Load pre-booked slots
+        console.log('Loading pre-booked slots for turf:', currentTurf.turf_id, 'date:', selectedDate);
+        const preBookedSlots = await loadPreBookedSlots(currentTurf.turf_id, selectedDate);
+
+        // Combine all unavailable slots
+        const bookedSlots = [...preBookedSlots]; // Start with pre-booked slots
+        console.log('Pre-booked slots loaded:', preBookedSlots);
+        
         if (dayBookings && dayBookings.length > 0) {
             dayBookings.forEach(booking => {
                 if (booking.time_slots) {
-                    // Handle both array and string formats
                     if (Array.isArray(booking.time_slots)) {
                         bookedSlots.push(...booking.time_slots);
                     } else if (typeof booking.time_slots === 'string') {
@@ -2167,12 +2171,80 @@ async function loadAvailableSlots() {
             });
         }
 
+        console.log('All booked slots (including pre-booked):', bookedSlots);
         setCachedData(cacheKey, bookedSlots);
         displaySlots(bookedSlots);
 
     } catch (error) {
         console.error('Error loading slots:', error);
         showError('slotsContainer', 'Network error. Please try again.', 'loadAvailableSlots()');
+    }
+}
+
+// Load pre-bookings for slot availability
+// Load pre-bookings for slot availability
+async function loadPreBookedSlots(turfId, date) {
+    try {
+        const { data: existingBookings, error } = await supabase
+    .from('bookings')
+    .select('time_slots')
+    .eq('turf_id', turfId)
+    .eq('booking_date', selectedDate)
+    .eq('status', 'confirmed'); // This will include pre-bookings since they're confirmed
+
+        if (error) {
+            console.error('Error loading pre-bookings:', error);
+            return [];
+        }
+
+        const preBookedSlots = [];
+        const selectedDate = new Date(date);
+        const dayOfWeek = selectedDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const currentDayName = dayNames[dayOfWeek];
+
+        console.log('Checking pre-bookings for date:', date, 'day:', currentDayName);
+
+        preBookings.forEach(preBooking => {
+            console.log('Processing pre-booking:', preBooking);
+            
+            if (preBooking.booking_type === 'weekly' || preBooking.booking_type === 'custom') {
+                // Check if current day is in selected days
+                if (preBooking.selected_days) {
+                    const selectedDays = preBooking.selected_days.toLowerCase().split(',').map(d => d.trim());
+                    console.log('Selected days:', selectedDays, 'Current day:', currentDayName);
+                    
+                    if (selectedDays.includes(currentDayName)) {
+                        const slots = preBooking.time_slots ? preBooking.time_slots.split(',').map(slot => slot.trim()) : [];
+                        console.log('Adding pre-booked slots:', slots);
+                        preBookedSlots.push(...slots);
+                    }
+                }
+            } else if (preBooking.booking_type === 'specific') {
+                // Check if current date is in selected dates
+                if (preBooking.selected_dates) {
+                    const selectedDates = preBooking.selected_dates.split(',').map(d => d.trim());
+                    console.log('Selected dates:', selectedDates, 'Current date:', date);
+                    
+                    if (selectedDates.includes(date)) {
+                        const slots = preBooking.time_slots ? preBooking.time_slots.split(',').map(slot => slot.trim()) : [];
+                        console.log('Adding pre-booked slots for specific date:', slots);
+                        preBookedSlots.push(...slots);
+                    }
+                }
+            } else if (preBooking.booking_type === 'daily') {
+                // Daily bookings apply to all dates
+                const slots = preBooking.time_slots ? preBooking.time_slots.split(',').map(slot => slot.trim()) : [];
+                console.log('Adding daily pre-booked slots:', slots);
+                preBookedSlots.push(...slots);
+            }
+        });
+
+        console.log('Final pre-booked slots:', preBookedSlots);
+        return preBookedSlots;
+    } catch (error) {
+        console.error('Error loading pre-bookings:', error);
+        return [];
     }
 }
 // Add this function to debug the exact issue
