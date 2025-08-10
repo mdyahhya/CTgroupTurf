@@ -964,6 +964,65 @@ body {
     opacity: 0.7;
 }
 
+
+/* Contact and Location Section Styles */
+.contact-section, .location-section {
+    margin: 15px 0;
+}
+
+.call-btn, .maps-btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    margin-right: 10px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.call-btn:hover, .maps-btn:hover {
+    background: #45a049;
+    transform: translateY(-1px);
+}
+
+.call-btn {
+    background: #2196F3;
+}
+
+.call-btn:hover {
+    background: #1976D2;
+}
+
+.maps-btn {
+    background: #FF5722;
+}
+
+.maps-btn:hover {
+    background: #E64A19;
+}
+
+.call-btn svg, .maps-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .call-btn, .maps-btn {
+        padding: 10px 14px;
+        font-size: 16px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: center;
+        width: auto;
+    }
+}
     </style>
 </head>
 <body>
@@ -1594,6 +1653,33 @@ document.getElementById('editProfileForm').addEventListener('submit', async func
             <p><strong>Description:</strong> ${turf.description}</p>
             <p><strong>Timings:</strong> ${formatTime(turf.opening_time)} - ${formatTime(turf.closing_time)}</p>
 
+            ${turf.owner_phone ? `
+                <div class="contact-section">
+                    <p><strong>Contact:</strong> 
+                        <button class="call-btn" onclick="makeCall('${turf.owner_phone}')" title="Call ${turf.owner_phone}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                            </svg>
+                        </button>
+                        ${turf.owner_phone}
+                    </p>
+                </div>
+            ` : ''}
+
+            ${turf.google_maps_link ? `
+                <div class="location-section">
+                    <p><strong>Location:</strong> 
+                        <button class="maps-btn" onclick="openMaps('${turf.google_maps_link}')" title="Open in Maps">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            View on Google Maps
+                        </button>
+                    </p>
+                </div>
+            ` : ''}
+
             <div class="booking-section">
                 <h3>Book Slots</h3>
                 <input type="date" id="bookingDate" min="${new Date().toISOString().split('T')[0]}" 
@@ -1615,6 +1701,67 @@ document.getElementById('editProfileForm').addEventListener('submit', async func
     } catch (error) {
         console.error('Error showing turf detail:', error);
         alert('Error loading turf details. Please try again.');
+    }
+}
+
+// Function to handle phone calls
+function makeCall(phoneNumber) {
+    try {
+        // Clean the phone number (remove spaces, dashes, etc.)
+        const cleanNumber = phoneNumber.replace(/\s+/g, '').replace(/-/g, '');
+        
+        // Check if it's a PWA or mobile browser
+        if (window.matchMedia('(display-mode: standalone)').matches || 
+            /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+            // Mobile device - use tel: protocol
+            window.location.href = `tel:${cleanNumber}`;
+        } else {
+            // Desktop browser - copy number and show alert
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(cleanNumber).then(() => {
+                    alert(`Phone number ${cleanNumber} copied to clipboard`);
+                }).catch(() => {
+                    alert(`Please call: ${cleanNumber}`);
+                });
+            } else {
+                alert(`Please call: ${cleanNumber}`);
+            }
+        }
+    } catch (error) {
+        console.error('Error making call:', error);
+        alert(`Please call: ${phoneNumber}`);
+    }
+}
+
+// Function to handle Google Maps links
+function openMaps(mapsLink) {
+    try {
+        // Check if it's a PWA
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            // PWA - open in Chrome/default browser
+            if (/Android/i.test(navigator.userAgent)) {
+                // Android - try to open in Google Maps app first
+                const googleMapsApp = mapsLink.replace('https://maps.google.com', 'google.navigation:q=');
+                const fallbackLink = `googlemaps://${mapsLink.split('maps.google.com')[1] || ''}`;
+                
+                // Try Google Maps app, fallback to browser
+                window.location.href = mapsLink;
+            } else if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                // iOS - try Apple Maps first, fallback to Google Maps
+                const appleMapsLink = mapsLink.replace('https://maps.google.com/maps', 'maps://maps.apple.com');
+                window.location.href = appleMapsLink || mapsLink;
+            } else {
+                // Other platforms - open in default browser
+                window.open(mapsLink, '_blank');
+            }
+        } else {
+            // Regular website - open in new tab
+            window.open(mapsLink, '_blank', 'noopener,noreferrer');
+        }
+    } catch (error) {
+        console.error('Error opening maps:', error);
+        // Fallback - open in new tab
+        window.open(mapsLink, '_blank', 'noopener,noreferrer');
     }
 }
 function getPricingDisplayText(turf) {
@@ -2638,7 +2785,7 @@ navigator.serviceWorker.addEventListener('controllerchange', () => {
 
 
 
-        // Clear cache periodically
+        
         setInterval(() => {
             const now = Date.now();
             for (const [key, value] of dataCache.entries()) {
@@ -2648,7 +2795,7 @@ navigator.serviceWorker.addEventListener('controllerchange', () => {
             }
         }, cacheExpiry);
 
-        // Handle network errors gracefully
+        
         window.addEventListener('online', function() {
             if (currentUser && turfs.length === 0) {
                 loadTurfs();
