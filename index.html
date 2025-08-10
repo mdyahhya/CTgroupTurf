@@ -1023,6 +1023,133 @@ body {
         width: auto;
     }
 }
+
+
+/* Contact and Location Line Styles */
+.contact-section, .location-section {
+    margin: 15px 0;
+}
+
+.contact-line, .maps-line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Round Icon Buttons with Glow and Bounce */
+.call-icon-btn, .maps-icon-btn {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.3s ease;
+    animation: bounce 2s infinite;
+}
+
+.call-icon-btn {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+}
+
+.maps-icon-btn {
+    background: linear-gradient(135deg, #FF5722, #E64A19);
+    color: white;
+    box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4);
+}
+/* 
+
+.call-icon-btn::before, .maps-icon-btn::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+}
+
+.call-icon-btn::before {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    animation: glow-green 2s ease-in-out infinite alternate;
+}
+
+.maps-icon-btn::before {
+    background: linear-gradient(135deg, #FF5722, #E64A19);
+    animation: glow-red 2s ease-in-out infinite alternate;
+}
+
+.call-icon-btn:hover, .maps-icon-btn:hover {
+    transform: scale(1.1);
+    animation-play-state: paused;
+}
+
+.call-icon-btn:hover::before, .maps-icon-btn:hover::before {
+    opacity: 1;
+} */
+
+/* Click to call text */
+.click-text {
+    font-size: 14px;
+    color: #666;
+    font-style: italic;
+}
+
+/* Animations */
+/* @keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-8px);
+    }
+    60% {
+        transform: translateY(-4px);
+    }
+}
+
+@keyframes glow-green {
+    from {
+        box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
+    }
+    to {
+        box-shadow: 0 0 30px rgba(76, 175, 80, 0.8);
+    }
+}
+
+@keyframes glow-red {
+    from {
+        box-shadow: 0 0 20px rgba(255, 87, 34, 0.6);
+    }
+    to {
+        box-shadow: 0 0 30px rgba(255, 87, 34, 0.8);
+    }
+} */
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .contact-line, .maps-line {
+        gap: 10px;
+    }
+    
+    .call-icon-btn, .maps-icon-btn {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .click-text {
+        font-size: 12px;
+    }
+}
     </style>
 </head>
 <body>
@@ -1655,31 +1782,31 @@ document.getElementById('editProfileForm').addEventListener('submit', async func
 
             ${turf.owner_phone ? `
     <div class="contact-section">
-        <p><strong>Contact:</strong> 
-            ${turf.owner_name ? `<span class="owner-name">${turf.owner_name}</span> - ` : ''}
-            <button class="call-btn" onclick="makeCall('${turf.owner_phone}')" title="Call ${turf.owner_phone}">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="contact-line">
+            <span><strong>Contact:</strong> ${turf.owner_name || 'Owner'} ${turf.owner_phone}</span>
+            <button class="call-icon-btn" onclick="makeCall('${turf.owner_phone}')" title="Call ${turf.owner_phone}">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
                 </svg>
             </button>
-            ${turf.owner_phone}
-        </p>
+            <span class="click-text">Click to call</span>
+        </div>
     </div>
 ` : ''}
 
-            ${turf.google_maps_link ? `
-                <div class="location-section">
-                    <p><strong>Location:</strong> 
-                        <button class="maps-btn" onclick="openMaps('${turf.google_maps_link}')" title="Open in Maps">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                <circle cx="12" cy="10" r="3"></circle>
-                            </svg>
-                            View on Google Maps
-                        </button>
-                    </p>
-                </div>
-            ` : ''}
+${turf.google_maps_link ? `
+    <div class="location-section">
+        <div class="maps-line">
+            <span><strong>View on Google Maps</strong></span>
+            <button class="maps-icon-btn" onclick="openMaps('${turf.google_maps_link}')" title="Open in Maps">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+            </button>
+        </div>
+    </div>
+` : ''}
 
             <div class="booking-section">
                 <h3>Book Slots</h3>
