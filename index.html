@@ -311,16 +311,6 @@ body {
     font-size: 13px;
 }
 
-.user-info button {
-    padding: 6px 12px;
-    background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 12px;
-}
-
 /* Tab Content */
 .tab-content {
     display: none;
@@ -965,6 +955,53 @@ body {
 }
 
 
+.skip-login-btn {
+    background: transparent;
+    border: 1px solid #007bff;
+    color: #007bff;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.skip-login-btn:hover {
+    background: #007bff;
+    color: white;
+}
+.login-prompt {
+    text-align: center;
+    padding: 40px 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.login-prompt h3 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.login-prompt p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.login-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 30px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.login-btn:hover {
+    background: #0056b3;
+}
+
     </style>
 </head>
 <body>
@@ -993,6 +1030,7 @@ body {
                 <p>Already have an account? <span onclick="showLogin()" style="color: blue; cursor: pointer;">Login</span></p>
             </div>
         </div>
+        <button onclick="skipLogin()" class="skip-login-btn">Skip Login - Browse Turfs</button>
     </div>
 
     <!-- Main Content -->
@@ -1006,6 +1044,7 @@ body {
     <div class="user-name-container">
   <span id="userName"></span>
   <button onclick="showEditProfile()" class="edit-profile-btn" title="Edit Profile">
+    
     <!-- Correct Pencil Square Icon -->
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
       <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
@@ -1014,6 +1053,9 @@ body {
   </button>
 </div>
 <button onclick="logout()">Logout</button>
+
+<!-- Add this inside your edit profile modal -->
+
 
 
 
@@ -1057,6 +1099,7 @@ body {
         <span class="close" onclick="closeModal('editProfileModal')">&times;</span>
         <h2>Edit Profile</h2>
         <form id="editProfileForm">
+            <button onclick="showLoginModal()" class="login-btn">Login Now</button>
             <input type="text" id="editFullName" placeholder="Full Name" required>
             <input type="text" id="editPhone" placeholder="Phone Number" required readonly>
             <input type="password" id="currentPassword" placeholder="Current Password" required>
@@ -1137,18 +1180,116 @@ body {
 
 
         function showEditProfile() {
-    if (!currentUser) {
-        alert('User information not available');
+    // Check if user is guest
+    if (isGuestUser) {
+        // Show login modal directly for guest users
+        showLoginModal();
         return;
     }
-    
-    // Pre-fill the form with current user data
-    document.getElementById('editFullName').value = currentUser.full_name;
-    document.getElementById('editPhone').value = currentUser.phone;
-    document.getElementById('currentPassword').value = '';
-    document.getElementById('newPassword').value = '';
-    
-    showModal('editProfileModal');
+
+    // Check if user is properly logged in
+    if (!currentUser || !currentUser.phone) {
+        alert('Please login first');
+        showLoginModal();
+        return;
+    }
+
+    try {
+        // Populate form fields with current user data
+        const fullNameField = document.getElementById('editFullName');
+        const phoneField = document.getElementById('editPhone');
+        const emailField = document.getElementById('editEmail');
+
+        if (fullNameField) {
+            fullNameField.value = currentUser.full_name || '';
+        }
+        if (phoneField) {
+            phoneField.value = currentUser.phone || '';
+        }
+        if (emailField) {
+            emailField.value = currentUser.email || '';
+        }
+
+        // Hide guest login section (if it exists)
+        const guestSection = document.getElementById('guestLoginSection');
+        if (guestSection) {
+            guestSection.style.display = 'none';
+        }
+
+        // Show the edit profile modal
+        showModal('editProfileModal');
+
+    } catch (error) {
+        console.error('Error opening edit profile:', error);
+        alert('Error opening profile. Please try again.');
+    }
+}
+
+// Add this helper function for saving profile changes
+async function saveProfile() {
+    if (isGuestUser || !currentUser?.phone) {
+        alert('Please login first');
+        showLoginModal();
+        return;
+    }
+
+    try {
+        const fullName = document.getElementById('editFullName').value.trim();
+        const email = document.getElementById('editEmail').value.trim();
+        const phone = document.getElementById('editPhone').value.trim();
+
+        if (!fullName) {
+            alert('Full name is required');
+            return;
+        }
+
+        if (!phone) {
+            alert('Phone number is required');
+            return;
+        }
+
+        // Update user data in Supabase
+        const { data, error } = await supabase
+            .from('users')
+            .update({
+                full_name: fullName,
+                email: email || null
+            })
+            .eq('phone', currentUser.phone);
+
+        if (error) {
+            console.error('Error updating profile:', error);
+            alert('Failed to update profile. Please try again.');
+            return;
+        }
+
+        // Update current user object
+        currentUser.full_name = fullName;
+        currentUser.email = email;
+        
+        // Update localStorage
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+        // Update UI
+        updateUserDisplay();
+        
+        alert('Profile updated successfully!');
+        closeModal('editProfileModal');
+
+    } catch (error) {
+        console.error('Error saving profile:', error);
+        alert('Error saving profile. Please try again.');
+    }
+}
+
+// Helper function to update user display in UI
+function updateUserDisplay() {
+    const userNameElements = document.querySelectorAll('.user-name');
+    userNameElements.forEach(element => {
+        if (currentUser && currentUser.full_name) {
+            element.textContent = currentUser.full_name;
+        }
+    });
 }
 
 // Handle edit profile form submission
@@ -1260,6 +1401,35 @@ document.getElementById('editProfileForm').addEventListener('submit', async func
                 `;
             }
         }
+
+
+        // Add these global variables at the top
+let isGuestUser = false;
+let guestUserData = { full_name: 'Guest User', phone: null };
+
+// Add this function to handle skip login
+function skipLogin() {
+    isGuestUser = true;
+    currentUser = guestUserData;
+    
+    // Hide login modal/section and show main content
+    const loginModal = document.getElementById('loginModal'); // Replace with your actual login modal ID
+    if (loginModal) {
+        loginModal.style.display = 'none';
+    }
+    
+    // Show main content
+    const mainContent = document.getElementById('mainContent'); // Replace with your main content ID
+    if (mainContent) {
+        mainContent.style.display = 'block';
+    }
+    
+    // Load turfs as guest
+    loadTurfs();
+}
+
+// Modify your existing loadAvailableSlots function - find where it loads slots and add this check at the beginning:
+
 
         // Debounce function for search
         function debounce(func, wait) {
@@ -1642,6 +1812,32 @@ ${turf.google_maps_link ? `
         console.error('Error showing turf detail:', error);
         alert('Error loading turf details. Please try again.');
     }
+}
+
+
+function showLoginModal() {
+    // Hide any open modals first
+    closeAllModals();
+    
+    // Show login modal
+    const loginModal = document.getElementById('loginModal'); // Replace with your actual login modal ID
+    if (loginModal) {
+        loginModal.style.display = 'block';
+    }
+    
+    // Reset guest status
+    isGuestUser = false;
+}
+
+function closeAllModals() {
+    // Add IDs of all your modals here
+    const modals = ['editProfileModal', 'turfDetailModal']; // Add your modal IDs
+    modals.forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    });
 }
 
 // Function to handle phone calls
@@ -2152,6 +2348,13 @@ function createSlotHTML(timeSlot, isBooked, price) {
 
 
         async function bookSlots() {
+    // Check if guest user is trying to book
+    if (isGuestUser) {
+        alert('Please login to book slots');
+        showLoginModal();
+        return;
+    }
+
     if (selectedSlots.length === 0 || !selectedDate) {
         alert('Please select date and slots');
         return;
@@ -2176,7 +2379,7 @@ function createSlotHTML(timeSlot, isBooked, price) {
         slotPrices.push({ slot, price: slotPrice });
     });
 
-    console.log('Booking calculation:', slotPrices, 'Total:', totalPrice); // Debug log
+    console.log('Booking calculation:', slotPrices, 'Total:', totalPrice);
 
     const bookBtn = event.target;
     const originalText = bookBtn.textContent;
@@ -2191,7 +2394,8 @@ function createSlotHTML(timeSlot, isBooked, price) {
         }
 
         if (!currentUser?.phone || !currentUser?.full_name) {
-            alert('User information missing');
+            alert('User information missing. Please login properly.');
+            showLoginModal();
             return;
         }
 
@@ -2202,9 +2406,9 @@ function createSlotHTML(timeSlot, isBooked, price) {
             booking_date: String(selectedDate),
             time_slots: selectedSlots.join(','),
             total_hours: Number(selectedSlots.length),
-            total_price: totalPrice, // Use calculated dynamic price
+            total_price: totalPrice,
             status: 'pending',
-            booking_type: 'regular' // Add this line
+            booking_type: 'regular'
         };
 
         console.log('Sending booking data:', bookingData);
@@ -2226,7 +2430,7 @@ function createSlotHTML(timeSlot, isBooked, price) {
         dataCache.delete(`slots_${currentTurf.turf_id}_${selectedDate}`);
         dataCache.delete('userBookings');
         
-        if (document.getElementById('bookingsTab').classList.contains('active')) {
+        if (document.getElementById('bookingsTab') && document.getElementById('bookingsTab').classList.contains('active')) {
             loadUserBookings();
         }
 
@@ -2238,9 +2442,21 @@ function createSlotHTML(timeSlot, isBooked, price) {
         bookBtn.disabled = false;
     }
 }
-
 // Also update the loadAvailableSlots function to handle errors better
 async function loadAvailableSlots() {
+    // Check if guest user is trying to view slots
+    if (isGuestUser) {
+        const slotsContainer = document.getElementById('slotsContainer');
+        slotsContainer.innerHTML = `
+            <div class="login-prompt">
+                <h3>Login Required</h3>
+                <p>Please login to view and book slots</p>
+                <button onclick="showLoginModal()" class="login-btn">Login Now</button>
+            </div>
+        `;
+        return;
+    }
+
     selectedDate = document.getElementById('bookingDate').value;
     if (!selectedDate) return;
 
@@ -2261,8 +2477,7 @@ async function loadAvailableSlots() {
             .select('time_slots, status')
             .eq('turf_id', currentTurf.turf_id)
             .eq('booking_date', selectedDate)
-            .in('status', ['confirmed', 'pending'])
-            .eq('status', 'confirmed'); // This will now include pre-bookings
+            .in('status', ['confirmed', 'pending']);
 
         if (error) {
             console.error('Error loading slots:', error);
@@ -2300,7 +2515,6 @@ async function loadAvailableSlots() {
         showError('slotsContainer', 'Network error. Please try again.', 'loadAvailableSlots()');
     }
 }
-
 // Load pre-bookings for slot availability
 // Load pre-bookings for slot availability
 async function loadPreBookedSlots(turfId, date) {
@@ -2778,6 +2992,9 @@ navigator.serviceWorker.addEventListener('controllerchange', () => {
         window.addEventListener('offline', function() {
             console.log('App is now offline');
         });
+
+
+        
     </script>
 </body>
 </html>
