@@ -2184,10 +2184,10 @@ function showInstallPrompt() {
     installBtn.className = 'install-btn';
     installBtn.addEventListener('click', installApp);
     
-    // Add to header (or wherever you want)
-    const header = document.querySelector('.header');
-    if (header && deferredPrompt) {
-        header.appendChild(installBtn);
+    // Add to app header instead of nav header
+    const appHeader = document.querySelector('.app-header');
+    if (appHeader && deferredPrompt) {
+        appHeader.appendChild(installBtn);
     }
 }
 
