@@ -1939,7 +1939,7 @@ function skipLogin() {
             </div>
             
             <div class="refresh-hint">
-                <small>💡 First refresh to load latest available slots, then book</small>
+                <small>💡 First refresh to load latest available slots, then only book</small>
             </div>
             
             ${getPricingDisplayText(turf)}
@@ -2153,6 +2153,11 @@ function changeImageSwipe(direction) {
     if (counter) {
         counter.textContent = `${currentImageIndex + 1}/${images.length}`;
     }
+}
+
+// Legacy function for backward compatibility (if you have old button calls)
+function changeImage(direction) {
+    changeImageSwipe(direction);
 }
 
 
