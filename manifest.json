@@ -1,60 +1,65 @@
 {
+  "id": "/?source=pwa",
   "name": "TurfBook",
   "short_name": "TurfBook",
   "description": "Book your favorite turf slots easily and quickly",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#667eea",
   "orientation": "portrait",
-  "scope": "/",
+  "dir": "ltr",
   "lang": "en",
   "categories": ["sports", "booking", "entertainment"],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
   "icons": [
     {
-      "src": "turf.jpg",
+      "src": "turf.png",
       "sizes": "72x72",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "turf.jpg",
+      "src": "turf.png",
       "sizes": "96x96",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "turf.jpg",
+      "src": "turf.png",
       "sizes": "128x128",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "turf.jpg",
+      "src": "turf.png",
       "sizes": "144x144",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "turf.jpg",
+      "src": "turf.png",
       "sizes": "152x152",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "turf.jpg",
+      "src": "turf.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "turf.jpg",
+      "src": "turf.png",
       "sizes": "384x384",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "turf.jpg",
+      "src": "turf.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -68,8 +73,9 @@
       "url": "/#book",
       "icons": [
         {
-          "src": "icons/icon-192x192.png",
-          "sizes": "192x192"
+          "src": "turf.png",
+          "sizes": "192x192",
+          "type": "image/png"
         }
       ]
     },
@@ -80,10 +86,19 @@
       "url": "/#bookings",
       "icons": [
         {
-          "src": "icons/icon-192x192.png",
-          "sizes": "192x192"
+          "src": "turf.png",
+          "sizes": "192x192",
+          "type": "image/png"
         }
       ]
     }
-  ]
+  ],
+  "screenshots": [
+    {
+      "src": "images/screenshot1.png",
+      "sizes": "1080x1920",
+      "type": "image/png"
+    }
+  ],
+  "prefer_related_applications": false
 }
